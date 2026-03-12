@@ -12,8 +12,8 @@ Thank you for your interest in contributing! This guide will help you get starte
 ### Getting Started
 
 ```bash
-git clone https://github.com/Jordonh18/claude-fastmail-connector.git
-cd claude-fastmail-connector
+git clone https://github.com/Jordonh18/fastmail-mcp-server.git
+cd fastmail-mcp-server
 npm install
 npm run build
 ```

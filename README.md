@@ -95,9 +95,9 @@ Add to your Windsurf MCP configuration (`~/.codeium/windsurf/mcp_config.json`):
 }
 ```
 
-#### VS Code with GitHub Copilot
+#### VS Code
 
-Add to your VS Code settings (`.vscode/mcp.json`):
+Add to your VS Code MCP configuration (`.vscode/mcp.json`):
 
 ```json
 {
@@ -243,8 +243,8 @@ Environment variables and CLI flags always take precedence over config file valu
 See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed development guidelines.
 
 ```bash
-git clone https://github.com/Jordonh18/claude-fastmail-connector.git
-cd claude-fastmail-connector
+git clone https://github.com/Jordonh18/fastmail-mcp-server.git
+cd fastmail-mcp-server
 npm install
 npm run build
 npm test

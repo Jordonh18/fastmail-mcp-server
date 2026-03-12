@@ -459,16 +459,29 @@ export function registerEmailReadTools(server: McpServer, client: JmapClient): v
         };
       }
 
+      const isImage = contentType.startsWith("image/");
+
+      if (isImage) {
+        return {
+          content: [
+            {
+              type: "text",
+              text: `Attachment: ${name} (${contentType}, ${content.length} bytes)`,
+            },
+            {
+              type: "image" as const,
+              data: content.toString("base64"),
+              mimeType: contentType,
+            },
+          ],
+        };
+      }
+
       return {
         content: [
           {
             type: "text",
-            text: `Attachment: ${name} (${contentType}, ${content.length} bytes)`,
-          },
-          {
-            type: "image" as const,
-            data: content.toString("base64"),
-            mimeType: contentType,
+            text: `Attachment: ${name} (${contentType}, ${content.length} bytes)\n\nBase64 content:\n${content.toString("base64")}`,
           },
         ],
       };
