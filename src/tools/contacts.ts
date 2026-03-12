@@ -499,4 +499,159 @@ export function registerContactTools(
       };
     },
   );
+
+  server.tool(
+    "update_contact",
+    "Update an existing contact's information. Only the fields you provide will be updated; other fields remain unchanged.",
+    {
+      contactId: z.string().describe("The contact ID to update (from search_contacts or get_contact)"),
+      firstName: z
+        .string()
+        .optional()
+        .describe("Updated first/given name"),
+      lastName: z
+        .string()
+        .optional()
+        .describe("Updated last/family name"),
+      prefix: z
+        .string()
+        .optional()
+        .describe("Updated name prefix (e.g. Mr, Ms, Dr)"),
+      suffix: z
+        .string()
+        .optional()
+        .describe("Updated name suffix (e.g. Jr, III)"),
+      emails: z
+        .array(
+          z.object({
+            address: z.string().describe("Email address"),
+            label: z
+              .string()
+              .optional()
+              .default("personal")
+              .describe("Label for the email (e.g. personal, work)"),
+          }),
+        )
+        .optional()
+        .describe("Updated email addresses (replaces all existing emails)"),
+      phones: z
+        .array(
+          z.object({
+            number: z.string().describe("Phone number"),
+            label: z
+              .string()
+              .optional()
+              .default("mobile")
+              .describe("Label for the phone (e.g. mobile, work, home)"),
+          }),
+        )
+        .optional()
+        .describe("Updated phone numbers (replaces all existing phones)"),
+      company: z
+        .string()
+        .optional()
+        .describe("Updated company/organization name"),
+      jobTitle: z.string().optional().describe("Updated job title"),
+      notes: z.string().optional().describe("Updated notes about the contact"),
+    },
+    async ({
+      contactId,
+      firstName,
+      lastName,
+      prefix: namePrefix,
+      suffix: nameSuffix,
+      emails,
+      phones,
+      company,
+      jobTitle,
+      notes,
+    }) => {
+      const accountId = await client.getAccountId();
+      const using = await getContactsUsing(client);
+
+      const patch: Record<string, unknown> = {};
+
+      // Name updates
+      if (firstName !== undefined || lastName !== undefined || namePrefix !== undefined || nameSuffix !== undefined) {
+        const nameParts: Record<string, string> = {};
+        if (firstName) nameParts.given = firstName;
+        if (lastName) nameParts.surname = lastName;
+        if (namePrefix) nameParts.prefix = namePrefix;
+        if (nameSuffix) nameParts.suffix = nameSuffix;
+        const fullParts = [namePrefix, firstName, lastName, nameSuffix].filter(Boolean);
+        nameParts.full = fullParts.join(" ");
+        patch.name = nameParts;
+      }
+
+      // Emails
+      if (emails !== undefined) {
+        const emailMap: Record<string, { address: string }> = {};
+        for (let i = 0; i < emails.length; i++) {
+          const e = emails[i];
+          emailMap[e.label || `email${i + 1}`] = { address: e.address };
+        }
+        patch.emails = emailMap;
+      }
+
+      // Phones
+      if (phones !== undefined) {
+        const phoneMap: Record<string, { number: string }> = {};
+        for (let i = 0; i < phones.length; i++) {
+          const p = phones[i];
+          phoneMap[p.label || `phone${i + 1}`] = { number: p.number };
+        }
+        patch.phones = phoneMap;
+      }
+
+      // Organization
+      if (company !== undefined || jobTitle !== undefined) {
+        if (company !== undefined) {
+          patch.organizations = { org1: { name: company } };
+        }
+        if (jobTitle !== undefined) {
+          patch.titles = { t1: { name: jobTitle } };
+        }
+      }
+
+      // Notes
+      if (notes !== undefined) {
+        patch.notes = notes;
+      }
+
+      if (Object.keys(patch).length === 0) {
+        return {
+          content: [{ type: "text", text: "No updates specified." }],
+        };
+      }
+
+      const response = await client.request(
+        [
+          contactCardSet(accountId, {
+            update: { [contactId]: patch },
+          }),
+        ],
+        using,
+      );
+
+      const [, data] = response.methodResponses[0];
+      const notUpdated = data.notUpdated as
+        | Record<string, { type: string; description?: string }>
+        | undefined;
+
+      if (notUpdated?.[contactId]) {
+        throw new Error(
+          `Failed to update contact: ${notUpdated[contactId].description ?? notUpdated[contactId].type}`,
+        );
+      }
+
+      return {
+        content: [
+          {
+            type: "text",
+            text: `Contact ${contactId} updated successfully.`,
+          },
+        ],
+      };
+    },
+  );
 }

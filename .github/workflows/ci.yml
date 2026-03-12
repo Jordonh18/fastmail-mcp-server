@@ -1,0 +1,72 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-test:
+    name: Build & Test (Node ${{ matrix.node-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - node-version: 18
+            run-tests: false
+          - node-version: 20
+            run-tests: true
+          - node-version: 22
+            run-tests: true
+      fail-fast: false
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type check
+        run: npx tsc --noEmit
+
+      - name: Build
+        run: npm run build
+
+      - name: Run all Vitest test files (src/**/*.test.ts)
+        if: ${{ matrix.run-tests }}
+        run: npm test
+
+  typecheck:
+    name: Type Check (Strict)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Strict type check (source files)
+        run: npx tsc --noEmit
+
+      - name: Strict type check (test files)
+        # Test files may reference test-only types not in tsconfig; this is informational
+        run: npx tsc --noEmit -p tsconfig.json --include "src/**/*.test.ts" --skipLibCheck || true

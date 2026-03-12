@@ -63,17 +63,23 @@ claude --mcp-server "npx @jordonh18/fastmail-connector"
 
 | Tool | Description |
 |------|-------------|
-| `search_emails` | Search emails by mailbox, text, sender, date range, etc. |
+| `search_emails` | Search emails by mailbox, text, sender, date range, attachments, etc. |
 | `get_email` | Get full email content by ID |
 | `get_thread` | Get all emails in a conversation thread |
+| `get_unread_emails` | Quickly retrieve unread emails, optionally filtered by mailbox |
+| `get_latest_emails` | Get the most recent emails from all or a specific mailbox |
+| `get_mailbox_emails` | List emails in a specific mailbox with pagination |
 | `send_email` | Compose and send a new email |
 | `reply_email` | Reply or reply-all to an email |
 | `forward_email` | Forward an email to new recipients |
 | `create_draft` | Save an email as a draft without sending |
+| `send_draft` | Send a previously saved draft email |
 | `move_email` | Move an email to a different mailbox |
 | `update_email_flags` | Mark emails as read/unread or flagged/unflagged |
 | `delete_email` | Move to Trash or permanently delete |
 | `bulk_email_action` | Perform actions on multiple emails at once (mark read/unread, flag, move, delete) |
+| `archive_email` | Move one or more emails to the Archive mailbox |
+| `mark_mailbox_read` | Mark all emails in a mailbox as read |
 
 ### Mailbox
 
@@ -103,6 +109,7 @@ claude --mcp-server "npx @jordonh18/fastmail-connector"
 | `search_contacts` | Search contacts by name, email, or other criteria |
 | `get_contact` | Get full details of a specific contact |
 | `create_contact` | Create a new contact with email, phone, organization, etc. |
+| `update_contact` | Update an existing contact's information |
 | `delete_contact` | Delete a contact |
 
 ### Identity

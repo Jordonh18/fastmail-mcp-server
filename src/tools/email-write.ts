@@ -474,4 +474,91 @@ export function registerEmailWriteTools(server: McpServer, client: JmapClient): 
       };
     },
   );
+
+  server.tool(
+    "send_draft",
+    "Send a previously saved draft email. The draft must already exist in the Drafts mailbox.",
+    {
+      emailId: z.string().describe("The ID of the draft email to send"),
+      identityId: z
+        .string()
+        .optional()
+        .describe("Sender identity ID. Auto-detected from draft if omitted."),
+    },
+    async ({ emailId, identityId }) => {
+      const accountId = await client.getAccountId();
+
+      // Fetch the draft to get sender info
+      const draftResponse = await client.request([
+        emailGet(accountId, [emailId]),
+      ]);
+      const [, draftData] = draftResponse.methodResponses[0];
+      const drafts = (draftData.list as Email[]) ?? [];
+
+      if (drafts.length === 0) {
+        throw new Error(`Draft not found: ${emailId}`);
+      }
+
+      const draft = drafts[0];
+
+      // Verify it's actually a draft
+      if (!draft.keywords?.["$draft"]) {
+        throw new Error("This email is not a draft. Only draft emails can be sent with this tool.");
+      }
+
+      // Resolve identity from draft's from address
+      const fromEmail = draft.from?.[0]?.email;
+      const identity = await resolveIdentity(client, identityId, fromEmail);
+
+      const sentMailbox = await getMailboxByRole(client, "sent");
+
+      // Submit the draft for sending
+      const onSuccessUpdate: Record<string, unknown> = {
+        "keywords/$draft": null,
+      };
+      if (sentMailbox) {
+        // Move from current mailbox to sent
+        const currentMailboxIds = Object.keys(draft.mailboxIds || {});
+        for (const mbId of currentMailboxIds) {
+          onSuccessUpdate[`mailboxIds/${mbId}`] = null;
+        }
+        onSuccessUpdate[`mailboxIds/${sentMailbox.id}`] = true;
+      }
+
+      const response = await client.request([
+        emailSubmissionSet(
+          accountId,
+          { send: { identityId: identity.id, emailId } },
+          { onSuccessUpdateEmail: { "#send": onSuccessUpdate } },
+        ),
+      ]);
+
+      const submissionResponse = response.methodResponses.find(
+        ([name]) => name === "EmailSubmission/set",
+      );
+      if (submissionResponse) {
+        const [, subData] = submissionResponse;
+        const notCreated = subData.notCreated as Record<string, { type: string; description?: string }> | undefined;
+        if (notCreated?.send) {
+          throw new Error(
+            `Failed to send draft: ${notCreated.send.description ?? notCreated.send.type}`,
+          );
+        }
+      }
+
+      const recipients = [
+        ...(draft.to?.map(formatAddress) ?? []),
+        ...(draft.cc?.map(formatAddress) ?? []),
+      ];
+
+      return {
+        content: [
+          {
+            type: "text",
+            text: `Draft sent successfully to ${recipients.join(", ") || "recipients"}`,
+          },
+        ],
+      };
+    },
+  );
 }

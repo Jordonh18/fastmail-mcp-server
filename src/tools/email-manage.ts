@@ -1,21 +1,38 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { JmapClient } from "../jmap/client.js";
-import { emailSet, mailboxGet } from "../jmap/methods.js";
+import { emailQuery, emailSet, mailboxGet } from "../jmap/methods.js";
 import { Mailbox } from "../jmap/types.js";
 
 let cachedTrashId: string | null = null;
+let cachedArchiveId: string | null = null;
+let cachedMailboxes: Mailbox[] | null = null;
 
-async function getTrashMailboxId(client: JmapClient): Promise<string> {
-  if (cachedTrashId) return cachedTrashId;
+async function loadMailboxes(client: JmapClient): Promise<Mailbox[]> {
+  if (cachedMailboxes) return cachedMailboxes;
   const accountId = await client.getAccountId();
   const response = await client.request([mailboxGet(accountId)]);
   const [, data] = response.methodResponses[0];
-  const mailboxes = (data.list as Mailbox[]) ?? [];
+  cachedMailboxes = (data.list as Mailbox[]) ?? [];
+  return cachedMailboxes;
+}
+
+async function getTrashMailboxId(client: JmapClient): Promise<string> {
+  if (cachedTrashId) return cachedTrashId;
+  const mailboxes = await loadMailboxes(client);
   const trash = mailboxes.find((m) => m.role === "trash");
   if (!trash) throw new Error("Could not find Trash mailbox.");
   cachedTrashId = trash.id;
   return cachedTrashId;
+}
+
+async function getArchiveMailboxId(client: JmapClient): Promise<string> {
+  if (cachedArchiveId) return cachedArchiveId;
+  const mailboxes = await loadMailboxes(client);
+  const archive = mailboxes.find((m) => m.role === "archive");
+  if (!archive) throw new Error("Could not find Archive mailbox. You may need to create one first.");
+  cachedArchiveId = archive.id;
+  return cachedArchiveId;
 }
 
 export function registerEmailManageTools(server: McpServer, client: JmapClient): void {
@@ -262,6 +279,98 @@ export function registerEmailManageTools(server: McpServer, client: JmapClient):
           {
             type: "text",
             text: `${emailIds.length} email(s) ${description}.`,
+          },
+        ],
+      };
+    },
+  );
+
+  server.tool(
+    "archive_email",
+    "Move one or more emails to the Archive mailbox. A convenient one-step operation for archiving emails you've dealt with.",
+    {
+      emailIds: z
+        .union([z.string(), z.array(z.string())])
+        .describe("A single email ID or array of email IDs to archive"),
+    },
+    async ({ emailIds: rawIds }) => {
+      const accountId = await client.getAccountId();
+      const archiveId = await getArchiveMailboxId(client);
+
+      const emailIds = Array.isArray(rawIds) ? rawIds : [rawIds];
+
+      const update: Record<string, Record<string, unknown>> = {};
+      for (const id of emailIds) {
+        update[id] = { mailboxIds: { [archiveId]: true } };
+      }
+
+      await client.request([
+        emailSet(accountId, { update }),
+      ]);
+
+      return {
+        content: [
+          {
+            type: "text",
+            text: emailIds.length === 1
+              ? `Email ${emailIds[0]} archived.`
+              : `${emailIds.length} email(s) archived.`,
+          },
+        ],
+      };
+    },
+  );
+
+  server.tool(
+    "mark_mailbox_read",
+    "Mark all emails in a specific mailbox as read. Useful for clearing unread counts on a mailbox. Processes up to 500 unread emails at a time.",
+    {
+      mailboxId: z.string().describe("The mailbox ID whose emails should be marked as read (use list_mailboxes to find IDs)"),
+    },
+    async ({ mailboxId }) => {
+      const accountId = await client.getAccountId();
+
+      // Query all unread emails in the mailbox
+      const filter: Record<string, unknown> = {
+        operator: "AND",
+        conditions: [
+          { inMailbox: mailboxId },
+          {
+            operator: "NOT",
+            conditions: [{ hasKeyword: "$seen" }],
+          },
+        ],
+      };
+
+      const response = await client.request([
+        emailQuery(accountId, filter, { limit: 500 }, "mrq"),
+      ]);
+
+      const queryResponse = response.methodResponses.find(([name]) => name === "Email/query");
+      if (!queryResponse) {
+        return { content: [{ type: "text", text: "No unread emails found in this mailbox." }] };
+      }
+
+      const emailIds = (queryResponse[1].ids as string[]) ?? [];
+      if (emailIds.length === 0) {
+        return { content: [{ type: "text", text: "All emails in this mailbox are already read." }] };
+      }
+
+      // Mark all as read
+      const update: Record<string, Record<string, unknown>> = {};
+      for (const id of emailIds) {
+        update[id] = { "keywords/$seen": true };
+      }
+
+      await client.request([
+        emailSet(accountId, { update }),
+      ]);
+
+      return {
+        content: [
+          {
+            type: "text",
+            text: `${emailIds.length} email(s) marked as read.`,
           },
         ],
       };
