@@ -1,6 +1,6 @@
-# Fastmail MCP Connector
+# Fastmail MCP Server
 
-MCP connector for Fastmail. Enables Claude to read, search, send, and manage emails, calendars, and contacts in a Fastmail account via the JMAP protocol.
+A Model Context Protocol (MCP) server for Fastmail. Enables any MCP-compatible AI assistant to read, search, send, and manage emails, calendars, and contacts in a Fastmail account via the JMAP protocol.
 
 ## Prerequisites
 
@@ -21,16 +21,18 @@ MCP connector for Fastmail. Enables Claude to read, search, send, and manage ema
 ### 2. Install
 
 ```bash
-npm install @jordonh18/fastmail-connector
+npm install @jordonh18/fastmail-mcp-server
 ```
 
 Or run directly:
 
 ```bash
-npx @jordonh18/fastmail-connector
+npx @jordonh18/fastmail-mcp-server
 ```
 
 ### 3. Configure
+
+This MCP server works with any AI assistant that supports the Model Context Protocol. Below are examples for popular MCP clients.
 
 #### Claude Desktop
 
@@ -41,7 +43,7 @@ Add to your Claude Desktop configuration (`claude_desktop_config.json`):
   "mcpServers": {
     "fastmail": {
       "command": "npx",
-      "args": ["@jordonh18/fastmail-connector"],
+      "args": ["@jordonh18/fastmail-mcp-server"],
       "env": {
         "FASTMAIL_API_TOKEN": "your-api-token-here"
       }
@@ -54,8 +56,18 @@ Add to your Claude Desktop configuration (`claude_desktop_config.json`):
 
 ```bash
 export FASTMAIL_API_TOKEN="your-api-token-here"
-claude --mcp-server "npx @jordonh18/fastmail-connector"
+claude mcp add fastmail -- npx @jordonh18/fastmail-mcp-server
 ```
+
+#### Other MCP Clients
+
+For any MCP-compatible client, run the server with the `FASTMAIL_API_TOKEN` environment variable set:
+
+```bash
+FASTMAIL_API_TOKEN="your-api-token-here" npx @jordonh18/fastmail-mcp-server
+```
+
+The server communicates over stdio, following the standard MCP transport protocol.
 
 ## Tools
 
@@ -121,10 +133,11 @@ claude --mcp-server "npx @jordonh18/fastmail-connector"
 ## Development
 
 ```bash
-git clone https://github.com/jordonh18/claude-fastmail-connector.git
+git clone https://github.com/Jordonh18/claude-fastmail-connector.git
 cd claude-fastmail-connector
 npm install
 npm run build
+npm test
 ```
 
 Run locally:
