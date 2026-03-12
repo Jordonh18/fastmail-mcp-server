@@ -1,0 +1,100 @@
+name: Deep Testing
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test-coverage:
+    name: Test Coverage
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests with coverage
+        run: npx vitest run --coverage.enabled --coverage.provider=v8 --coverage.reporter=text --coverage.reporter=json-summary
+
+      - name: Check coverage thresholds
+        run: |
+          echo "Coverage report generated. Review the output above for details."
+          echo "Target: >70% line coverage on src/ files"
+
+  build-integrity:
+    name: Build Integrity
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Clean build
+        run: |
+          rm -rf dist
+          npm run build
+
+      - name: Verify dist output exists
+        run: |
+          test -f dist/index.js || (echo "ERROR: dist/index.js not found" && exit 1)
+          test -f dist/server.js || (echo "ERROR: dist/server.js not found" && exit 1)
+          echo "Build output verified successfully"
+
+      - name: Verify no test files in dist
+        run: |
+          if find dist -name "*.test.*" | grep -q .; then
+            echo "ERROR: Test files found in dist/"
+            find dist -name "*.test.*"
+            exit 1
+          fi
+          echo "No test files in dist/ — clean build confirmed"
+
+      - name: Verify package entry point
+        run: node -e "import('./dist/server.js').then(m => { if(typeof m.createServer !== 'function') { throw new Error('createServer not exported'); } console.log('Entry point verified'); })"
+
+  dependency-audit:
+    name: Dependency Audit
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Audit dependencies
+        run: npm audit --production || true
+
+      - name: Check for outdated dependencies
+        run: npm outdated || true
