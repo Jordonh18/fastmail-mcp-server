@@ -1,6 +1,6 @@
 # Fastmail MCP Connector
 
-Official Anthropic MCP connector for Fastmail. Enables Claude to read, search, send, and manage emails in a Fastmail account via the JMAP protocol.
+MCP connector for Fastmail. Enables Claude to read, search, send, and manage emails in a Fastmail account via the JMAP protocol.
 
 ## Prerequisites
 
@@ -21,13 +21,13 @@ Official Anthropic MCP connector for Fastmail. Enables Claude to read, search, s
 ### 2. Install
 
 ```bash
-npm install @anthropic/fastmail-connector
+npm install @jordonh18/fastmail-connector
 ```
 
 Or run directly:
 
 ```bash
-npx @anthropic/fastmail-connector
+npx @jordonh18/fastmail-connector
 ```
 
 ### 3. Configure
@@ -41,7 +41,7 @@ Add to your Claude Desktop configuration (`claude_desktop_config.json`):
   "mcpServers": {
     "fastmail": {
       "command": "npx",
-      "args": ["@anthropic/fastmail-connector"],
+      "args": ["@jordonh18/fastmail-connector"],
       "env": {
         "FASTMAIL_API_TOKEN": "your-api-token-here"
       }
@@ -54,7 +54,7 @@ Add to your Claude Desktop configuration (`claude_desktop_config.json`):
 
 ```bash
 export FASTMAIL_API_TOKEN="your-api-token-here"
-claude --mcp-server "npx @anthropic/fastmail-connector"
+claude --mcp-server "npx @jordonh18/fastmail-connector"
 ```
 
 ## Tools
@@ -77,8 +77,8 @@ claude --mcp-server "npx @anthropic/fastmail-connector"
 ## Development
 
 ```bash
-git clone https://github.com/anthropics/fastmail-connector.git
-cd fastmail-connector
+git clone https://github.com/jordonh18/claude-fastmail-connector.git
+cd claude-fastmail-connector
 npm install
 npm run build
 ```
