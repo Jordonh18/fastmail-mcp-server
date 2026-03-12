@@ -40,7 +40,7 @@ export interface Email {
   bodyValues: Record<string, { value: string; isEncodingProblem: boolean }>;
   textBody: { partId: string; type: string }[];
   htmlBody: { partId: string; type: string }[];
-  attachments: { name: string | null; type: string; size: number }[];
+  attachments: { blobId: string; name: string | null; type: string; size: number }[];
   keywords: Record<string, boolean>;
   messageId: string[];
   inReplyTo: string[] | null;

@@ -59,6 +59,60 @@ export FASTMAIL_API_TOKEN="your-api-token-here"
 claude mcp add fastmail -- npx @jordonh18/fastmail-mcp-server
 ```
 
+#### Cursor
+
+Add to your Cursor MCP configuration (`.cursor/mcp.json`):
+
+```json
+{
+  "mcpServers": {
+    "fastmail": {
+      "command": "npx",
+      "args": ["@jordonh18/fastmail-mcp-server"],
+      "env": {
+        "FASTMAIL_API_TOKEN": "your-api-token-here"
+      }
+    }
+  }
+}
+```
+
+#### Windsurf
+
+Add to your Windsurf MCP configuration (`~/.codeium/windsurf/mcp_config.json`):
+
+```json
+{
+  "mcpServers": {
+    "fastmail": {
+      "command": "npx",
+      "args": ["@jordonh18/fastmail-mcp-server"],
+      "env": {
+        "FASTMAIL_API_TOKEN": "your-api-token-here"
+      }
+    }
+  }
+}
+```
+
+#### VS Code with GitHub Copilot
+
+Add to your VS Code settings (`.vscode/mcp.json`):
+
+```json
+{
+  "servers": {
+    "fastmail": {
+      "command": "npx",
+      "args": ["@jordonh18/fastmail-mcp-server"],
+      "env": {
+        "FASTMAIL_API_TOKEN": "your-api-token-here"
+      }
+    }
+  }
+}
+```
+
 #### Other MCP Clients
 
 For any MCP-compatible client, run the server with the `FASTMAIL_API_TOKEN` environment variable set:
@@ -67,7 +121,11 @@ For any MCP-compatible client, run the server with the `FASTMAIL_API_TOKEN` envi
 FASTMAIL_API_TOKEN="your-api-token-here" npx @jordonh18/fastmail-mcp-server
 ```
 
-The server communicates over stdio, following the standard MCP transport protocol.
+The server communicates over stdio by default, following the standard MCP transport protocol. To run over HTTP instead, use the `--transport` flag:
+
+```bash
+FASTMAIL_API_TOKEN="your-api-token-here" npx @jordonh18/fastmail-mcp-server --transport http --port 3000
+```
 
 ## Tools
 
@@ -92,6 +150,7 @@ The server communicates over stdio, following the standard MCP transport protoco
 | `bulk_email_action` | Perform actions on multiple emails at once (mark read/unread, flag, move, delete) |
 | `archive_email` | Move one or more emails to the Archive mailbox |
 | `mark_mailbox_read` | Mark all emails in a mailbox as read |
+| `download_attachment` | Download an email attachment by blob ID |
 
 ### Mailbox
 
@@ -130,7 +189,58 @@ The server communicates over stdio, following the standard MCP transport protoco
 |------|-------------|
 | `get_identities` | List available sender identities |
 
+## Transport Modes
+
+The server supports two transport modes:
+
+### stdio (default)
+
+Standard input/output transport. Used by most MCP clients (Claude Desktop, Cursor, VS Code, etc.):
+
+```bash
+FASTMAIL_API_TOKEN="your-token" npx @jordonh18/fastmail-mcp-server
+```
+
+### HTTP (Streamable HTTP)
+
+Runs as an HTTP server for remote access or multi-client scenarios:
+
+```bash
+FASTMAIL_API_TOKEN="your-token" npx @jordonh18/fastmail-mcp-server --transport http --port 3000
+```
+
+The HTTP transport exposes a single `/mcp` endpoint that supports the MCP Streamable HTTP protocol.
+
+## Configuration
+
+The server can be configured via environment variables or a JSON config file.
+
+### Environment Variables
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `FASTMAIL_API_TOKEN` | Yes | Fastmail API token with JMAP access |
+
+### Config File
+
+Create a `.fastmail-mcp.json` file in your project root or home directory:
+
+```json
+{
+  "transport": "stdio",
+  "port": 3000
+}
+```
+
+The server searches for config files in this order:
+1. `./.fastmail-mcp.json` (current directory)
+2. `~/.fastmail-mcp.json` (home directory)
+
+Environment variables and CLI flags always take precedence over config file values.
+
 ## Development
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed development guidelines.
 
 ```bash
 git clone https://github.com/Jordonh18/claude-fastmail-connector.git

@@ -179,4 +179,57 @@ export class JmapClient {
 
     return result;
   }
+
+  /**
+   * Download a blob (attachment) using the JMAP download URL template.
+   * Returns the blob content as a Buffer and its content type.
+   */
+  async downloadBlob(
+    blobId: string,
+    name: string,
+  ): Promise<{ content: Buffer; contentType: string }> {
+    const session = await this.getSession();
+    const accountId = await this.getAccountId();
+
+    const url = session.downloadUrl
+      .replace("{accountId}", encodeURIComponent(accountId))
+      .replace("{blobId}", encodeURIComponent(blobId))
+      .replace("{name}", encodeURIComponent(name))
+      .replace("{type}", "application/octet-stream");
+
+    let response: Response;
+    try {
+      response = await fetch(url, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${this.apiToken}`,
+        },
+      });
+    } catch (err) {
+      throw new Error(
+        `Network error downloading attachment: ${err instanceof Error ? err.message : String(err)}`,
+      );
+    }
+
+    if (response.status === 401) {
+      this.session = null;
+      this.accountId = null;
+      throw new Error(
+        "Authentication failed. Your API token may have been revoked.",
+      );
+    }
+
+    if (!response.ok) {
+      throw new Error(
+        `Failed to download attachment: ${response.status} ${response.statusText}`,
+      );
+    }
+
+    const contentType = response.headers.get("content-type") ?? "application/octet-stream";
+    const arrayBuffer = await response.arrayBuffer();
+    return {
+      content: Buffer.from(arrayBuffer),
+      contentType,
+    };
+  }
 }
