@@ -68,6 +68,55 @@ export class JmapClient {
     return this.accountId!;
   }
 
+  /**
+   * Check if a given JMAP capability is available in the current session.
+   */
+  async hasCapability(capability: string): Promise<boolean> {
+    const session = await this.getSession();
+    const accountId = await this.getAccountId();
+    const account = Object.entries(session.accounts ?? {}).find(
+      ([id]) => id === accountId,
+    );
+    if (!account) return false;
+    const accountObj = account[1] as Record<string, unknown>;
+    const capabilities = accountObj.accountCapabilities as
+      | Record<string, unknown>
+      | undefined;
+    if (capabilities && capability in capabilities) return true;
+    // Also check top-level session capabilities
+    const sessionCaps = (session as unknown as Record<string, unknown>)
+      .capabilities as Record<string, unknown> | undefined;
+    return !!(sessionCaps && capability in sessionCaps);
+  }
+
+  /**
+   * Get the calendar capability URI available for this session.
+   * Returns the standard URI or Fastmail-specific one, or null if unavailable.
+   */
+  async getCalendarCapability(): Promise<string | null> {
+    if (await this.hasCapability(JMAP_CAPABILITIES.CALENDARS)) {
+      return JMAP_CAPABILITIES.CALENDARS;
+    }
+    if (await this.hasCapability(JMAP_CAPABILITIES.FM_CALENDARS)) {
+      return JMAP_CAPABILITIES.FM_CALENDARS;
+    }
+    return null;
+  }
+
+  /**
+   * Get the contacts capability URI available for this session.
+   * Returns the standard URI or Fastmail-specific one, or null if unavailable.
+   */
+  async getContactsCapability(): Promise<string | null> {
+    if (await this.hasCapability(JMAP_CAPABILITIES.CONTACTS)) {
+      return JMAP_CAPABILITIES.CONTACTS;
+    }
+    if (await this.hasCapability(JMAP_CAPABILITIES.FM_CONTACTS)) {
+      return JMAP_CAPABILITIES.FM_CONTACTS;
+    }
+    return null;
+  }
+
   async request(
     methodCalls: MethodCall[],
     using?: string[],

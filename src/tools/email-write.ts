@@ -412,4 +412,66 @@ export function registerEmailWriteTools(server: McpServer, client: JmapClient): 
       };
     },
   );
+
+  server.tool(
+    "create_draft",
+    "Save an email as a draft without sending. The draft can be edited or sent later.",
+    {
+      to: z.array(z.string()).describe("Recipient email addresses"),
+      cc: z.array(z.string()).optional().describe("CC recipient email addresses"),
+      bcc: z.array(z.string()).optional().describe("BCC recipient email addresses"),
+      subject: z.string().describe("Email subject line"),
+      body: z.string().describe("Email body text (plain text)"),
+      identityId: z
+        .string()
+        .optional()
+        .describe("Sender identity ID from get_identities. Uses default if omitted."),
+    },
+    async ({ to, cc, bcc, subject, body, identityId }) => {
+      const accountId = await client.getAccountId();
+      const identity = await resolveIdentity(client, identityId);
+      const draftsMailbox = await getMailboxByRole(client, "drafts");
+
+      if (!draftsMailbox) {
+        throw new Error("Could not find Drafts mailbox.");
+      }
+
+      const emailCreate: Record<string, unknown> = {
+        mailboxIds: { [draftsMailbox.id]: true },
+        from: [{ name: identity.name, email: identity.email }],
+        to: parseAddresses(to),
+        subject,
+        bodyValues: { body: { value: body, charset: "utf-8" } },
+        textBody: [{ partId: "body", type: "text/plain" }],
+        keywords: { $draft: true },
+      };
+
+      if (cc) emailCreate.cc = parseAddresses(cc);
+      if (bcc) emailCreate.bcc = parseAddresses(bcc);
+
+      const response = await client.request([
+        emailSet(accountId, { create: { draft: emailCreate } }),
+      ]);
+
+      const [, data] = response.methodResponses[0];
+      const created = data.created as Record<string, { id: string }> | undefined;
+
+      if (!created?.draft) {
+        const notCreated = data.notCreated as Record<string, { type: string; description?: string }> | undefined;
+        const error = notCreated?.draft;
+        throw new Error(
+          `Failed to create draft: ${error?.description ?? error?.type ?? "Unknown error"}`,
+        );
+      }
+
+      return {
+        content: [
+          {
+            type: "text",
+            text: `Draft saved successfully [id: ${created.draft.id}]`,
+          },
+        ],
+      };
+    },
+  );
 }

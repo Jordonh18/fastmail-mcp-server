@@ -5,6 +5,8 @@ import { registerIdentityTools } from "./tools/identity.js";
 import { registerEmailReadTools } from "./tools/email-read.js";
 import { registerEmailWriteTools } from "./tools/email-write.js";
 import { registerEmailManageTools } from "./tools/email-manage.js";
+import { registerCalendarTools } from "./tools/calendar.js";
+import { registerContactTools } from "./tools/contacts.js";
 
 export function createServer(): McpServer {
   const apiToken = process.env.FASTMAIL_API_TOKEN;
@@ -27,6 +29,8 @@ export function createServer(): McpServer {
   registerEmailReadTools(server, client);
   registerEmailWriteTools(server, client);
   registerEmailManageTools(server, client);
+  registerCalendarTools(server, client);
+  registerContactTools(server, client);
 
   return server;
 }
