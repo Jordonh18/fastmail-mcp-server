@@ -175,8 +175,8 @@ export function registerCalendarTools(
 
       const filter: Record<string, unknown> = {};
       if (calendarId) filter.inCalendars = [calendarId];
-      if (after) filter.after = new Date(after).toISOString().replace("Z", "");
-      if (before) filter.before = new Date(before).toISOString().replace("Z", "");
+      if (after) filter.after = new Date(after).toISOString();
+      if (before) filter.before = new Date(before).toISOString();
       if (title) filter.title = title;
 
       const cappedLimit = Math.min(limit, 100);
