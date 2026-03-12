@@ -323,7 +323,7 @@ export function registerEmailManageTools(server: McpServer, client: JmapClient):
 
   server.tool(
     "mark_mailbox_read",
-    "Mark all emails in a specific mailbox as read. Useful for clearing unread counts on a mailbox.",
+    "Mark all emails in a specific mailbox as read. Useful for clearing unread counts on a mailbox. Processes up to 500 unread emails at a time.",
     {
       mailboxId: z.string().describe("The mailbox ID whose emails should be marked as read (use list_mailboxes to find IDs)"),
     },

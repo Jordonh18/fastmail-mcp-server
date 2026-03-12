@@ -281,12 +281,6 @@ export function registerEmailReadTools(server: McpServer, client: JmapClient): v
     async ({ mailboxId, limit }) => {
       const accountId = await client.getAccountId();
 
-      const filter: Record<string, unknown> = {
-        hasKeyword: "$seen",
-        // JMAP uses NOT operator to find emails without $seen keyword
-      };
-      // Actually, JMAP filter for unread: NOT hasKeyword $seen
-      // We need to use the operator filter
       const unreadFilter: Record<string, unknown> = {
         operator: "NOT",
         conditions: [{ hasKeyword: "$seen" }],
