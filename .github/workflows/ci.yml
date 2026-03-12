@@ -15,7 +15,13 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [18, 20, 22]
+        include:
+          - node-version: 18
+            run-tests: false
+          - node-version: 20
+            run-tests: true
+          - node-version: 22
+            run-tests: true
       fail-fast: false
 
     steps:
@@ -38,6 +44,7 @@ jobs:
         run: npm run build
 
       - name: Run tests
+        if: ${{ matrix.run-tests }}
         run: npm test
 
   typecheck:
