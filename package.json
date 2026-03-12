@@ -1,7 +1,7 @@
 {
-  "name": "@anthropic/fastmail-connector",
+  "name": "@jordonh18/fastmail-connector",
   "version": "1.0.0",
-  "description": "Official Anthropic MCP connector for Fastmail — enables Claude to read, search, send, and manage emails via the JMAP protocol",
+  "description": "MCP connector for Fastmail — enables Claude to read, search, send, and manage emails via the JMAP protocol",
   "type": "module",
   "bin": {
     "fastmail-mcp": "./dist/index.js"
@@ -27,13 +27,12 @@
     "node": ">=18.0.0"
   },
   "license": "MIT",
-  "author": "Anthropic",
+  "author": "jordonh18",
   "keywords": [
     "mcp",
     "fastmail",
     "jmap",
     "email",
-    "anthropic",
     "claude"
   ]
 }
