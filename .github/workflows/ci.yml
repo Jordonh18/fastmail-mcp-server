@@ -61,4 +61,5 @@ jobs:
         run: npx tsc --noEmit
 
       - name: Strict type check (test files)
+        # Test files may reference test-only types not in tsconfig; this is informational
         run: npx tsc --noEmit -p tsconfig.json --include "src/**/*.test.ts" --skipLibCheck || true

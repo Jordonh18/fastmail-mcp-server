@@ -94,7 +94,9 @@ jobs:
         run: npm ci
 
       - name: Audit dependencies
+        # Informational — does not block CI; review output for known vulnerabilities
         run: npm audit --production || true
 
       - name: Check for outdated dependencies
+        # Informational — shows available updates without blocking CI
         run: npm outdated || true
