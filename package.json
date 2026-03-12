@@ -1,0 +1,39 @@
+{
+  "name": "@anthropic/fastmail-connector",
+  "version": "1.0.0",
+  "description": "Official Anthropic MCP connector for Fastmail — enables Claude to read, search, send, and manage emails via the JMAP protocol",
+  "type": "module",
+  "bin": {
+    "fastmail-mcp": "./dist/index.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "start": "node dist/index.js",
+    "prepare": "tsc"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.27.0",
+    "zod": "^3.23.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.5.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "license": "MIT",
+  "author": "Anthropic",
+  "keywords": [
+    "mcp",
+    "fastmail",
+    "jmap",
+    "email",
+    "anthropic",
+    "claude"
+  ]
+}
