@@ -28,7 +28,7 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Run tests with coverage
+      - name: Run all Vitest test files with coverage (src/**/*.test.ts)
         run: npx vitest run --coverage.enabled --coverage.provider=v8 --coverage.reporter=text --coverage.reporter=json-summary
 
       - name: Check coverage thresholds

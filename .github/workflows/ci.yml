@@ -43,7 +43,7 @@ jobs:
       - name: Build
         run: npm run build
 
-      - name: Run tests
+      - name: Run all Vitest test files (src/**/*.test.ts)
         if: ${{ matrix.run-tests }}
         run: npm test
 
