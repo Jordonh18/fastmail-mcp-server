@@ -139,4 +139,132 @@ export function registerEmailManageTools(server: McpServer, client: JmapClient):
       };
     },
   );
+
+  server.tool(
+    "bulk_email_action",
+    "Perform an action on multiple emails at once. Supports marking as read/unread, flagging/unflagging, moving, and deleting.",
+    {
+      emailIds: z
+        .array(z.string())
+        .min(1)
+        .describe("Array of email IDs to act on"),
+      action: z
+        .enum([
+          "mark_read",
+          "mark_unread",
+          "flag",
+          "unflag",
+          "move",
+          "delete",
+          "permanent_delete",
+        ])
+        .describe(
+          "Action to perform: mark_read, mark_unread, flag, unflag, move (requires mailboxId), delete (move to Trash), or permanent_delete",
+        ),
+      mailboxId: z
+        .string()
+        .optional()
+        .describe("Destination mailbox ID (required when action is 'move')"),
+    },
+    async ({ emailIds, action, mailboxId }) => {
+      const accountId = await client.getAccountId();
+
+      if (action === "move" && !mailboxId) {
+        throw new Error(
+          "mailboxId is required when action is 'move'. Use list_mailboxes to find available mailbox IDs.",
+        );
+      }
+
+      if (action === "permanent_delete") {
+        await client.request([
+          emailSet(accountId, { destroy: emailIds }),
+        ]);
+        return {
+          content: [
+            {
+              type: "text",
+              text: `${emailIds.length} email(s) permanently deleted.`,
+            },
+          ],
+        };
+      }
+
+      if (action === "delete") {
+        const trashId = await getTrashMailboxId(client);
+        const update: Record<string, Record<string, unknown>> = {};
+        for (const id of emailIds) {
+          update[id] = { mailboxIds: { [trashId]: true } };
+        }
+        await client.request([
+          emailSet(accountId, { update }),
+        ]);
+        return {
+          content: [
+            {
+              type: "text",
+              text: `${emailIds.length} email(s) moved to Trash.`,
+            },
+          ],
+        };
+      }
+
+      if (action === "move") {
+        const update: Record<string, Record<string, unknown>> = {};
+        for (const id of emailIds) {
+          update[id] = { mailboxIds: { [mailboxId!]: true } };
+        }
+        await client.request([
+          emailSet(accountId, { update }),
+        ]);
+        return {
+          content: [
+            {
+              type: "text",
+              text: `${emailIds.length} email(s) moved to mailbox ${mailboxId}.`,
+            },
+          ],
+        };
+      }
+
+      // Flag operations
+      const patch: Record<string, unknown> = {};
+      let description = "";
+      switch (action) {
+        case "mark_read":
+          patch["keywords/$seen"] = true;
+          description = "marked as read";
+          break;
+        case "mark_unread":
+          patch["keywords/$seen"] = null;
+          description = "marked as unread";
+          break;
+        case "flag":
+          patch["keywords/$flagged"] = true;
+          description = "flagged";
+          break;
+        case "unflag":
+          patch["keywords/$flagged"] = null;
+          description = "unflagged";
+          break;
+      }
+
+      const update: Record<string, Record<string, unknown>> = {};
+      for (const id of emailIds) {
+        update[id] = patch;
+      }
+
+      await client.request([
+        emailSet(accountId, { update }),
+      ]);
+
+      return {
+        content: [
+          {
+            type: "text",
+            text: `${emailIds.length} email(s) ${description}.`,
+          },
+        ],
+      };
+    },
+  );
 }

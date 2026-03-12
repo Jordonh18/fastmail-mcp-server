@@ -89,4 +89,89 @@ export function registerMailboxTools(server: McpServer, client: JmapClient): voi
       };
     },
   );
+
+  server.tool(
+    "rename_mailbox",
+    "Rename an existing mailbox (folder). Use list_mailboxes to find the mailbox ID.",
+    {
+      mailboxId: z.string().describe("The mailbox ID to rename"),
+      newName: z.string().describe("The new name for the mailbox"),
+    },
+    async ({ mailboxId, newName }) => {
+      const accountId = await client.getAccountId();
+
+      const response = await client.request([
+        mailboxSet(accountId, {
+          update: { [mailboxId]: { name: newName } },
+        }),
+      ]);
+
+      const [, data] = response.methodResponses[0];
+      const notUpdated = data.notUpdated as
+        | Record<string, { type: string; description?: string }>
+        | undefined;
+
+      if (notUpdated?.[mailboxId]) {
+        throw new Error(
+          `Failed to rename mailbox: ${notUpdated[mailboxId].description ?? notUpdated[mailboxId].type}`,
+        );
+      }
+
+      return {
+        content: [
+          {
+            type: "text",
+            text: `Mailbox renamed to "${newName}" successfully.`,
+          },
+        ],
+      };
+    },
+  );
+
+  server.tool(
+    "delete_mailbox",
+    "Delete a mailbox (folder). The mailbox must be empty or you must set force=true to delete with all contents. System mailboxes (Inbox, Trash, etc.) cannot be deleted.",
+    {
+      mailboxId: z.string().describe("The mailbox ID to delete"),
+      force: z
+        .boolean()
+        .optional()
+        .default(false)
+        .describe(
+          "Set to true to delete the mailbox even if it contains emails (moves emails to Trash). Default: false (only delete if empty).",
+        ),
+    },
+    async ({ mailboxId, force }) => {
+      const accountId = await client.getAccountId();
+
+      const destroyOp: Record<string, unknown> = {};
+      if (force) {
+        destroyOp.onDestroyRemoveEmails = true;
+      }
+
+      const response = await client.request([
+        mailboxSet(accountId, { destroy: [mailboxId], ...destroyOp }),
+      ]);
+
+      const [, data] = response.methodResponses[0];
+      const notDestroyed = data.notDestroyed as
+        | Record<string, { type: string; description?: string }>
+        | undefined;
+
+      if (notDestroyed?.[mailboxId]) {
+        throw new Error(
+          `Failed to delete mailbox: ${notDestroyed[mailboxId].description ?? notDestroyed[mailboxId].type}`,
+        );
+      }
+
+      return {
+        content: [
+          {
+            type: "text",
+            text: `Mailbox ${mailboxId} deleted successfully.`,
+          },
+        ],
+      };
+    },
+  );
 }

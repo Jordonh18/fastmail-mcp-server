@@ -166,3 +166,196 @@ export function threadGet(
 ): MethodCall {
   return ["Thread/get", { accountId, ids }, callId];
 }
+
+// --- Calendar methods ---
+
+export function calendarGet(
+  accountId: string,
+  callId = "calendar.get",
+): MethodCall {
+  return ["Calendar/get", { accountId, ids: null }, callId];
+}
+
+export function calendarEventGet(
+  accountId: string,
+  ids: string[],
+  options?: { properties?: string[] },
+  callId = "calendarevent.get",
+): MethodCall {
+  const args: Record<string, unknown> = { accountId, ids };
+  if (options?.properties) {
+    args.properties = options.properties;
+  }
+  return ["CalendarEvent/get", args, callId];
+}
+
+const CALENDAR_EVENT_PROPERTIES = [
+  "id",
+  "calendarIds",
+  "uid",
+  "title",
+  "description",
+  "start",
+  "timeZone",
+  "duration",
+  "showWithoutTime",
+  "status",
+  "freeBusyStatus",
+  "locations",
+  "participants",
+  "alerts",
+  "recurrenceRules",
+  "recurrenceOverrides",
+  "created",
+  "updated",
+  "replyTo",
+  "useDefaultAlerts",
+  "keywords",
+  "color",
+];
+
+export function calendarEventQuery(
+  accountId: string,
+  filter: Record<string, unknown>,
+  options?: {
+    sort?: { property: string; isAscending: boolean }[];
+    limit?: number;
+    position?: number;
+  },
+  callId = "calendarevent.query",
+): MethodCall {
+  return [
+    "CalendarEvent/query",
+    {
+      accountId,
+      filter,
+      sort: options?.sort ?? [{ property: "start", isAscending: true }],
+      limit: options?.limit ?? 50,
+      position: options?.position ?? 0,
+    },
+    callId,
+  ];
+}
+
+export function calendarEventGetByQueryRef(
+  refCallId: string,
+  options?: { properties?: string[] },
+  callId = "calendarevent.get",
+): MethodCall {
+  return [
+    "CalendarEvent/get",
+    {
+      "#ids": {
+        resultOf: refCallId,
+        name: "CalendarEvent/query",
+        path: "/ids",
+      },
+      properties: options?.properties ?? CALENDAR_EVENT_PROPERTIES,
+    },
+    callId,
+  ];
+}
+
+export function calendarEventSet(
+  accountId: string,
+  operations: {
+    create?: Record<string, Record<string, unknown>>;
+    update?: Record<string, Record<string, unknown>>;
+    destroy?: string[];
+  },
+  callId = "calendarevent.set",
+): MethodCall {
+  return ["CalendarEvent/set", { accountId, ...operations }, callId];
+}
+
+// --- Contact methods ---
+
+export function addressBookGet(
+  accountId: string,
+  callId = "addressbook.get",
+): MethodCall {
+  return ["AddressBook/get", { accountId, ids: null }, callId];
+}
+
+export function contactCardGet(
+  accountId: string,
+  ids: string[],
+  options?: { properties?: string[] },
+  callId = "contactcard.get",
+): MethodCall {
+  const args: Record<string, unknown> = { accountId, ids };
+  if (options?.properties) {
+    args.properties = options.properties;
+  }
+  return ["ContactCard/get", args, callId];
+}
+
+const CONTACT_CARD_PROPERTIES = [
+  "id",
+  "uid",
+  "name",
+  "emails",
+  "phones",
+  "addresses",
+  "organizations",
+  "notes",
+  "online",
+  "nicknames",
+  "titles",
+  "created",
+  "updated",
+];
+
+export function contactCardQuery(
+  accountId: string,
+  filter: Record<string, unknown>,
+  options?: {
+    sort?: { property: string; isAscending: boolean }[];
+    limit?: number;
+    position?: number;
+  },
+  callId = "contactcard.query",
+): MethodCall {
+  return [
+    "ContactCard/query",
+    {
+      accountId,
+      filter,
+      sort: options?.sort ?? [{ property: "name", isAscending: true }],
+      limit: options?.limit ?? 50,
+      position: options?.position ?? 0,
+    },
+    callId,
+  ];
+}
+
+export function contactCardGetByQueryRef(
+  refCallId: string,
+  options?: { properties?: string[] },
+  callId = "contactcard.get",
+): MethodCall {
+  return [
+    "ContactCard/get",
+    {
+      "#ids": {
+        resultOf: refCallId,
+        name: "ContactCard/query",
+        path: "/ids",
+      },
+      properties: options?.properties ?? CONTACT_CARD_PROPERTIES,
+    },
+    callId,
+  ];
+}
+
+export function contactCardSet(
+  accountId: string,
+  operations: {
+    create?: Record<string, Record<string, unknown>>;
+    update?: Record<string, Record<string, unknown>>;
+    destroy?: string[];
+  },
+  callId = "contactcard.set",
+): MethodCall {
+  return ["ContactCard/set", { accountId, ...operations }, callId];
+}
