@@ -98,13 +98,14 @@ export function registerEmailReadTools(server: McpServer, client: JmapClient): v
       subject: z.string().optional().describe("Filter by subject text"),
       after: z.string().optional().describe("Only emails after this date (ISO 8601, e.g. 2024-01-15)"),
       before: z.string().optional().describe("Only emails before this date (ISO 8601, e.g. 2024-02-15)"),
+      hasAttachment: z.boolean().optional().describe("Filter to emails with attachments (true) or without (false)"),
       limit: z
         .number()
         .optional()
         .default(20)
         .describe("Maximum number of results (default 20, max 100)"),
     },
-    async ({ mailboxId, query, from, to, subject, after, before, limit }) => {
+    async ({ mailboxId, query, from, to, subject, after, before, hasAttachment, limit }) => {
       const accountId = await client.getAccountId();
 
       const filter: Record<string, unknown> = {};
@@ -115,6 +116,7 @@ export function registerEmailReadTools(server: McpServer, client: JmapClient): v
       if (subject) filter.subject = subject;
       if (after) filter.after = new Date(after).toISOString();
       if (before) filter.before = new Date(before).toISOString();
+      if (hasAttachment !== undefined) filter.hasAttachment = hasAttachment;
 
       const cappedLimit = Math.min(limit, 100);
       const queryCallId = "q";
@@ -261,6 +263,183 @@ export function registerEmailReadTools(server: McpServer, client: JmapClient): v
 
       return {
         content: [{ type: "text", text: header + "\n" + lines.join("\n\n") }],
+      };
+    },
+  );
+
+  server.tool(
+    "get_unread_emails",
+    "Quickly retrieve unread emails, optionally filtered by mailbox. Useful for checking what needs attention.",
+    {
+      mailboxId: z.string().optional().describe("Filter to a specific mailbox ID (e.g. Inbox). If omitted, returns unread emails from all mailboxes."),
+      limit: z
+        .number()
+        .optional()
+        .default(20)
+        .describe("Maximum number of results (default 20, max 100)"),
+    },
+    async ({ mailboxId, limit }) => {
+      const accountId = await client.getAccountId();
+
+      const filter: Record<string, unknown> = {
+        hasKeyword: "$seen",
+        // JMAP uses NOT operator to find emails without $seen keyword
+      };
+      // Actually, JMAP filter for unread: NOT hasKeyword $seen
+      // We need to use the operator filter
+      const unreadFilter: Record<string, unknown> = {
+        operator: "NOT",
+        conditions: [{ hasKeyword: "$seen" }],
+      };
+
+      const combinedFilter: Record<string, unknown> = mailboxId
+        ? {
+            operator: "AND",
+            conditions: [
+              { inMailbox: mailboxId },
+              unreadFilter,
+            ],
+          }
+        : unreadFilter;
+
+      const cappedLimit = Math.min(limit, 100);
+      const queryCallId = "uq";
+
+      const response = await client.request([
+        emailQuery(accountId, combinedFilter, { limit: cappedLimit }, queryCallId),
+        emailGetByQueryRef(queryCallId, undefined, "ug"),
+      ]);
+
+      const getResponse = response.methodResponses.find(([name]) => name === "Email/get");
+      if (!getResponse) {
+        return { content: [{ type: "text", text: "No unread emails found." }] };
+      }
+
+      const emails = (getResponse[1].list as Email[]) ?? [];
+      if (emails.length === 0) {
+        return { content: [{ type: "text", text: "No unread emails." }] };
+      }
+
+      const queryResponse = response.methodResponses.find(([name]) => name === "Email/query");
+      const total = (queryResponse?.[1].total as number) ?? emails.length;
+
+      const header = `${total} unread email(s)${total > cappedLimit ? ` (showing first ${cappedLimit})` : ""}:\n`;
+      const lines = emails.map((email, i) => formatEmailSummary(email, i));
+
+      return {
+        content: [{ type: "text", text: header + lines.join("\n\n") }],
+      };
+    },
+  );
+
+  server.tool(
+    "get_latest_emails",
+    "Get the most recent emails from all mailboxes or a specific mailbox. Useful for quickly checking recent activity.",
+    {
+      mailboxId: z.string().optional().describe("Filter to a specific mailbox ID. If omitted, returns latest emails from all mailboxes."),
+      limit: z
+        .number()
+        .optional()
+        .default(10)
+        .describe("Number of recent emails to return (default 10, max 50)"),
+    },
+    async ({ mailboxId, limit }) => {
+      const accountId = await client.getAccountId();
+
+      const filter: Record<string, unknown> = {};
+      if (mailboxId) filter.inMailbox = mailboxId;
+
+      const cappedLimit = Math.min(limit, 50);
+      const queryCallId = "lq";
+
+      const response = await client.request([
+        emailQuery(
+          accountId,
+          filter,
+          {
+            sort: [{ property: "receivedAt", isAscending: false }],
+            limit: cappedLimit,
+          },
+          queryCallId,
+        ),
+        emailGetByQueryRef(queryCallId, undefined, "lg"),
+      ]);
+
+      const getResponse = response.methodResponses.find(([name]) => name === "Email/get");
+      if (!getResponse) {
+        return { content: [{ type: "text", text: "No emails found." }] };
+      }
+
+      const emails = (getResponse[1].list as Email[]) ?? [];
+      if (emails.length === 0) {
+        return { content: [{ type: "text", text: "No emails found." }] };
+      }
+
+      const header = `${emails.length} most recent email(s):\n`;
+      const lines = emails.map((email, i) => formatEmailSummary(email, i));
+
+      return {
+        content: [{ type: "text", text: header + lines.join("\n\n") }],
+      };
+    },
+  );
+
+  server.tool(
+    "get_mailbox_emails",
+    "List emails in a specific mailbox with pagination support. Useful for browsing through a folder's contents.",
+    {
+      mailboxId: z.string().describe("The mailbox ID to list emails from (use list_mailboxes to find IDs)"),
+      page: z
+        .number()
+        .optional()
+        .default(0)
+        .describe("Page number starting from 0 (default 0). Each page contains 'limit' emails."),
+      limit: z
+        .number()
+        .optional()
+        .default(20)
+        .describe("Number of emails per page (default 20, max 100)"),
+    },
+    async ({ mailboxId, page, limit }) => {
+      const accountId = await client.getAccountId();
+
+      const cappedLimit = Math.min(limit, 100);
+      const position = page * cappedLimit;
+      const queryCallId = "mq";
+
+      const response = await client.request([
+        emailQuery(
+          accountId,
+          { inMailbox: mailboxId },
+          {
+            sort: [{ property: "receivedAt", isAscending: false }],
+            limit: cappedLimit,
+            position,
+          },
+          queryCallId,
+        ),
+        emailGetByQueryRef(queryCallId, undefined, "mg"),
+      ]);
+
+      const getResponse = response.methodResponses.find(([name]) => name === "Email/get");
+      if (!getResponse) {
+        return { content: [{ type: "text", text: "No emails found in this mailbox." }] };
+      }
+
+      const emails = (getResponse[1].list as Email[]) ?? [];
+      if (emails.length === 0) {
+        return { content: [{ type: "text", text: page > 0 ? "No more emails on this page." : "This mailbox is empty." }] };
+      }
+
+      const queryResponse = response.methodResponses.find(([name]) => name === "Email/query");
+      const total = (queryResponse?.[1].total as number) ?? emails.length;
+      const totalPages = Math.ceil(total / cappedLimit);
+
+      const header = `Mailbox contents (page ${page + 1} of ${totalPages}, ${total} total email(s)):\n`;
+      const lines = emails.map((email, i) => formatEmailSummary(email, position + i));
+
+      return {
+        content: [{ type: "text", text: header + lines.join("\n\n") }],
       };
     },
   );
