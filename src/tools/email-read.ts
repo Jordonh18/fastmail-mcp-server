@@ -7,85 +7,15 @@ import {
   emailGetByQueryRef,
   threadGet,
 } from "../jmap/methods.js";
-import { Email, EmailAddress } from "../jmap/types.js";
+import { Email } from "../jmap/types.js";
+import {
+  MAX_BODY_LENGTH,
+  formatAddressList,
+  getEmailBody,
+  formatEmailSummary,
+} from "./email-helpers.js";
 
-const MAX_BODY_LENGTH = 50_000;
 const MAX_ATTACHMENT_SIZE = 10 * 1024 * 1024; // 10 MB
-
-function formatAddress(addr: EmailAddress): string {
-  return addr.name ? `${addr.name} <${addr.email}>` : addr.email;
-}
-
-function formatAddressList(addrs: EmailAddress[] | null): string {
-  if (!addrs || addrs.length === 0) return "";
-  return addrs.map(formatAddress).join(", ");
-}
-
-function stripHtml(html: string): string {
-  return html
-    .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "")
-    .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, "")
-    .replace(/<br\s*\/?>/gi, "\n")
-    .replace(/<\/p>/gi, "\n\n")
-    .replace(/<\/div>/gi, "\n")
-    .replace(/<\/li>/gi, "\n")
-    .replace(/<[^>]+>/g, "")
-    .replace(/&nbsp;/g, " ")
-    .replace(/&amp;/g, "&")
-    .replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">")
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'")
-    .replace(/\n{3,}/g, "\n\n")
-    .trim();
-}
-
-function getEmailBody(email: Email): string {
-  // Prefer text/plain
-  if (email.textBody && email.textBody.length > 0) {
-    const partId = email.textBody[0].partId;
-    const body = email.bodyValues?.[partId];
-    if (body) {
-      const text = body.value;
-      const suffix = body.isEncodingProblem ? "\n\n[Note: encoding issues detected]" : "";
-      return text.length > MAX_BODY_LENGTH
-        ? text.slice(0, MAX_BODY_LENGTH) + "\n\n[Content truncated]"
-        : text + suffix;
-    }
-  }
-
-  // Fall back to HTML stripped
-  if (email.htmlBody && email.htmlBody.length > 0) {
-    const partId = email.htmlBody[0].partId;
-    const body = email.bodyValues?.[partId];
-    if (body) {
-      const text = stripHtml(body.value);
-      return text.length > MAX_BODY_LENGTH
-        ? text.slice(0, MAX_BODY_LENGTH) + "\n\n[Content truncated]"
-        : text;
-    }
-  }
-
-  return "[No body content available]";
-}
-
-function formatEmailSummary(email: Email, index?: number): string {
-  const prefix = index !== undefined ? `${index + 1}. ` : "";
-  const from = formatAddressList(email.from) || "Unknown sender";
-  const date = new Date(email.receivedAt).toLocaleString();
-  const flags: string[] = [];
-  if (!email.keywords?.["$seen"]) flags.push("UNREAD");
-  if (email.keywords?.["$flagged"]) flags.push("FLAGGED");
-  const flagStr = flags.length > 0 ? ` [${flags.join(", ")}]` : "";
-
-  return [
-    `${prefix}${email.subject || "(no subject)"}${flagStr}`,
-    `  From: ${from}`,
-    `  Date: ${date}`,
-    `  Preview: ${email.preview}`,
-    `  [id: ${email.id}] [thread: ${email.threadId}]`,
-  ].join("\n");
-}
 
 export function registerEmailReadTools(server: McpServer, client: JmapClient): void {
   server.tool(
