@@ -12,23 +12,30 @@ import { Email, EmailAddress, Identity, Mailbox } from "../jmap/types.js";
 
 let cachedIdentities: Identity[] | null = null;
 let cachedMailboxes: Map<string, Mailbox> | null = null;
+let identityCacheTimestamp = 0;
+let mailboxCacheTimestamp = 0;
+const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
 
 async function getIdentities(client: JmapClient): Promise<Identity[]> {
-  if (cachedIdentities) return cachedIdentities;
+  if (cachedIdentities && Date.now() - identityCacheTimestamp < CACHE_TTL_MS) return cachedIdentities;
+  cachedIdentities = null;
   const accountId = await client.getAccountId();
   const response = await client.request([identityGet(accountId)]);
   const [, data] = response.methodResponses[0];
   cachedIdentities = (data.list as Identity[]) ?? [];
+  identityCacheTimestamp = Date.now();
   return cachedIdentities;
 }
 
 async function getMailboxByRole(client: JmapClient, role: string): Promise<Mailbox | undefined> {
-  if (!cachedMailboxes) {
+  if (!cachedMailboxes || Date.now() - mailboxCacheTimestamp >= CACHE_TTL_MS) {
+    cachedMailboxes = null;
     const accountId = await client.getAccountId();
     const response = await client.request([mailboxGet(accountId)]);
     const [, data] = response.methodResponses[0];
     const mailboxes = (data.list as Mailbox[]) ?? [];
     cachedMailboxes = new Map(mailboxes.map((m) => [m.id, m]));
+    mailboxCacheTimestamp = Date.now();
   }
   for (const mb of cachedMailboxes.values()) {
     if (mb.role === role) return mb;
@@ -63,13 +70,19 @@ async function resolveIdentity(
   return identities[0];
 }
 
-function parseAddresses(addresses: string[]): EmailAddress[] {
+const EMAIL_REGEX = /^[^\s@]+@[^\s@.]+(\.[^\s@.]+)+$/;
+
+export function parseAddresses(addresses: string[]): EmailAddress[] {
   return addresses.map((addr) => {
     const match = addr.match(/^(.+?)\s*<(.+)>$/);
-    if (match) {
-      return { name: match[1].trim(), email: match[2].trim() };
+    const email = match ? match[2].trim() : addr.trim();
+    if (!EMAIL_REGEX.test(email)) {
+      throw new Error(`Invalid email address format: "${email}"`);
     }
-    return { name: null, email: addr.trim() };
+    if (match) {
+      return { name: match[1].trim(), email };
+    }
+    return { name: null, email };
   });
 }
 
@@ -82,11 +95,11 @@ export function registerEmailWriteTools(server: McpServer, client: JmapClient): 
     "send_email",
     "Compose and send a new email. Use get_identities first to find available sender identities.",
     {
-      to: z.array(z.string()).describe("Recipient email addresses"),
-      cc: z.array(z.string()).optional().describe("CC recipient email addresses"),
-      bcc: z.array(z.string()).optional().describe("BCC recipient email addresses"),
-      subject: z.string().describe("Email subject line"),
-      body: z.string().describe("Email body text (plain text)"),
+      to: z.array(z.string()).min(1).max(100).describe("Recipient email addresses (max 100)"),
+      cc: z.array(z.string()).max(100).optional().describe("CC recipient email addresses (max 100)"),
+      bcc: z.array(z.string()).max(100).optional().describe("BCC recipient email addresses (max 100)"),
+      subject: z.string().max(998).describe("Email subject line"),
+      body: z.string().max(1_000_000).describe("Email body text (plain text, max 1 MB)"),
       identityId: z
         .string()
         .optional()
@@ -290,7 +303,7 @@ export function registerEmailWriteTools(server: McpServer, client: JmapClient): 
     "Forward an existing email to new recipients with an optional message",
     {
       emailId: z.string().describe("ID of the email to forward"),
-      to: z.array(z.string()).describe("Recipient email addresses to forward to"),
+      to: z.array(z.string()).min(1).max(100).describe("Recipient email addresses to forward to (max 100)"),
       body: z
         .string()
         .optional()
@@ -415,13 +428,13 @@ export function registerEmailWriteTools(server: McpServer, client: JmapClient): 
 
   server.tool(
     "create_draft",
-    "Save an email as a draft without sending. The draft can be edited or sent later.",
+    "Save an email as a draft without sending. The draft can be edited or sent later using send_draft.",
     {
-      to: z.array(z.string()).describe("Recipient email addresses"),
-      cc: z.array(z.string()).optional().describe("CC recipient email addresses"),
-      bcc: z.array(z.string()).optional().describe("BCC recipient email addresses"),
-      subject: z.string().describe("Email subject line"),
-      body: z.string().describe("Email body text (plain text)"),
+      to: z.array(z.string()).min(1).max(100).describe("Recipient email addresses (max 100)"),
+      cc: z.array(z.string()).max(100).optional().describe("CC recipient email addresses (max 100)"),
+      bcc: z.array(z.string()).max(100).optional().describe("BCC recipient email addresses (max 100)"),
+      subject: z.string().max(998).describe("Email subject line"),
+      body: z.string().max(1_000_000).describe("Email body text (plain text, max 1 MB)"),
       identityId: z
         .string()
         .optional()

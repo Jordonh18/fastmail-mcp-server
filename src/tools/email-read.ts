@@ -10,6 +10,7 @@ import {
 import { Email, EmailAddress } from "../jmap/types.js";
 
 const MAX_BODY_LENGTH = 50_000;
+const MAX_ATTACHMENT_SIZE = 10 * 1024 * 1024; // 10 MB
 
 function formatAddress(addr: EmailAddress): string {
   return addr.name ? `${addr.name} <${addr.email}>` : addr.email;
@@ -89,13 +90,13 @@ function formatEmailSummary(email: Email, index?: number): string {
 export function registerEmailReadTools(server: McpServer, client: JmapClient): void {
   server.tool(
     "search_emails",
-    "Search for emails in the Fastmail account by various criteria. Returns a summary list of matching emails.",
+    "Search for emails using filters like sender, recipient, subject, date range, or full-text query. Use this tool when you need to find specific emails matching particular criteria. For simply checking recent emails, use get_latest_emails instead. For unread emails only, use get_unread_emails instead.",
     {
       mailboxId: z.string().optional().describe("Filter to a specific mailbox ID"),
-      query: z.string().optional().describe("Full-text search query"),
-      from: z.string().optional().describe("Filter by sender email or name"),
-      to: z.string().optional().describe("Filter by recipient email or name"),
-      subject: z.string().optional().describe("Filter by subject text"),
+      query: z.string().max(1000).optional().describe("Full-text search query"),
+      from: z.string().max(500).optional().describe("Filter by sender email or name"),
+      to: z.string().max(500).optional().describe("Filter by recipient email or name"),
+      subject: z.string().max(998).optional().describe("Filter by subject text"),
       after: z.string().optional().describe("Only emails after this date (ISO 8601, e.g. 2024-01-15)"),
       before: z.string().optional().describe("Only emails before this date (ISO 8601, e.g. 2024-02-15)"),
       hasAttachment: z.boolean().optional().describe("Filter to emails with attachments (true) or without (false)"),
@@ -269,7 +270,7 @@ export function registerEmailReadTools(server: McpServer, client: JmapClient): v
 
   server.tool(
     "get_unread_emails",
-    "Quickly retrieve unread emails, optionally filtered by mailbox. Useful for checking what needs attention.",
+    "Retrieve unread emails, optionally filtered by mailbox. Best for checking what needs attention. Do not use search_emails for this purpose.",
     {
       mailboxId: z.string().optional().describe("Filter to a specific mailbox ID (e.g. Inbox). If omitted, returns unread emails from all mailboxes."),
       limit: z
@@ -328,7 +329,7 @@ export function registerEmailReadTools(server: McpServer, client: JmapClient): v
 
   server.tool(
     "get_latest_emails",
-    "Get the most recent emails from all mailboxes or a specific mailbox. Useful for quickly checking recent activity.",
+    "Get the most recent emails sorted by date. Best for quickly checking recent activity without specific search criteria. Do not use search_emails for this purpose.",
     {
       mailboxId: z.string().optional().describe("Filter to a specific mailbox ID. If omitted, returns latest emails from all mailboxes."),
       limit: z
@@ -380,7 +381,7 @@ export function registerEmailReadTools(server: McpServer, client: JmapClient): v
 
   server.tool(
     "get_mailbox_emails",
-    "List emails in a specific mailbox with pagination support. Useful for browsing through a folder's contents.",
+    "List emails in a specific mailbox with pagination support. Use this when browsing a folder's contents page by page. Use list_mailboxes first to find available mailbox IDs.",
     {
       mailboxId: z.string().describe("The mailbox ID to list emails from (use list_mailboxes to find IDs)"),
       page: z
@@ -440,7 +441,7 @@ export function registerEmailReadTools(server: McpServer, client: JmapClient): v
 
   server.tool(
     "download_attachment",
-    "Download an email attachment by its blob ID. Use get_email first to find attachment blob IDs. Returns the attachment content as base64-encoded data.",
+    "Download an email attachment by its blob ID. Use get_email first to find attachment blob IDs. Returns text content directly for text files, or base64-encoded data for binary files. Maximum attachment size is 10 MB.",
     {
       blobId: z.string().describe("The blob ID of the attachment (from get_email attachment listing)"),
       name: z.string().optional().default("attachment").describe("Filename for the download"),
@@ -448,14 +449,28 @@ export function registerEmailReadTools(server: McpServer, client: JmapClient): v
     async ({ blobId, name }) => {
       const { content, contentType } = await client.downloadBlob(blobId, name);
 
+      if (content.length > MAX_ATTACHMENT_SIZE) {
+        return {
+          content: [
+            {
+              type: "text",
+              text: `Attachment "${name}" (${contentType}, ${Math.round(content.length / 1024 / 1024)} MB) exceeds the 10 MB size limit and cannot be downloaded through this tool.`,
+            },
+          ],
+        };
+      }
+
       const isText = contentType.startsWith("text/") ||
         contentType === "application/json" ||
         contentType === "application/xml";
 
       if (isText) {
         const text = content.toString("utf-8");
+        const truncated = text.length > MAX_BODY_LENGTH
+          ? text.slice(0, MAX_BODY_LENGTH) + "\n\n[Content truncated]"
+          : text;
         return {
-          content: [{ type: "text", text: `Attachment: ${name} (${contentType})\n\n${text}` }],
+          content: [{ type: "text", text: `Attachment: ${name} (${contentType})\n\n${truncated}` }],
         };
       }
 

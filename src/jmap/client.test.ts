@@ -297,6 +297,50 @@ describe("JmapClient", () => {
       ).rejects.toThrow("Network error connecting to Fastmail");
     });
 
+    it("redacts API token from network error messages", async () => {
+      const secretToken = "fmu1-super-secret-token-12345";
+      const fetchMock = vi.fn()
+        .mockResolvedValueOnce({
+          ok: true,
+          status: 200,
+          json: () => Promise.resolve(MOCK_SESSION),
+        })
+        .mockRejectedValueOnce(new Error(`Connection failed with token ${secretToken} in header`));
+      globalThis.fetch = fetchMock;
+
+      const client = new JmapClient({ apiToken: secretToken });
+      try {
+        await client.request([["Email/get", {}, "call-1"]]);
+        expect.fail("Should have thrown");
+      } catch (err) {
+        const message = (err as Error).message;
+        expect(message).not.toContain(secretToken);
+        expect(message).toContain("[REDACTED]");
+      }
+    });
+
+    it("redacts API token from download network error messages", async () => {
+      const secretToken = "fmu1-another-secret-token";
+      const fetchMock = vi.fn()
+        .mockResolvedValueOnce({
+          ok: true,
+          status: 200,
+          json: () => Promise.resolve(MOCK_SESSION),
+        })
+        .mockRejectedValueOnce(new Error(`Failed with auth ${secretToken}`));
+      globalThis.fetch = fetchMock;
+
+      const client = new JmapClient({ apiToken: secretToken });
+      try {
+        await client.downloadBlob("blob-1", "file.txt");
+        expect.fail("Should have thrown");
+      } catch (err) {
+        const message = (err as Error).message;
+        expect(message).not.toContain(secretToken);
+        expect(message).toContain("[REDACTED]");
+      }
+    });
+
     it("clears session cache when session state changes", async () => {
       const fetchMock = vi.fn()
         .mockResolvedValueOnce({

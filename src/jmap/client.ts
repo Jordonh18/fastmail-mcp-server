@@ -18,6 +18,16 @@ export class JmapClient {
     this.sessionUrl = options.sessionUrl ?? SESSION_URL;
   }
 
+  /**
+   * Sanitize an error message to ensure it never contains the API token.
+   */
+  private sanitizeError(message: string): string {
+    if (this.apiToken && message.includes(this.apiToken)) {
+      return message.replaceAll(this.apiToken, "[REDACTED]");
+    }
+    return message;
+  }
+
   private get authHeaders(): Record<string, string> {
     return {
       Authorization: `Bearer ${this.apiToken}`,
@@ -141,7 +151,7 @@ export class JmapClient {
       });
     } catch (err) {
       throw new Error(
-        `Network error connecting to Fastmail: ${err instanceof Error ? err.message : String(err)}`,
+        this.sanitizeError(`Network error connecting to Fastmail: ${err instanceof Error ? err.message : String(err)}`),
       );
     }
 
@@ -207,7 +217,7 @@ export class JmapClient {
       });
     } catch (err) {
       throw new Error(
-        `Network error downloading attachment: ${err instanceof Error ? err.message : String(err)}`,
+        this.sanitizeError(`Network error downloading attachment: ${err instanceof Error ? err.message : String(err)}`),
       );
     }
 

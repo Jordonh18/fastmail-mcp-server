@@ -51,7 +51,7 @@ export function registerMailboxTools(server: McpServer, client: JmapClient): voi
     "create_mailbox",
     "Create a new mailbox (folder) in the Fastmail account",
     {
-      name: z.string().describe("Name for the new mailbox/folder"),
+      name: z.string().min(1).max(256).describe("Name for the new mailbox/folder"),
       parentId: z
         .string()
         .optional()
@@ -95,7 +95,7 @@ export function registerMailboxTools(server: McpServer, client: JmapClient): voi
     "Rename an existing mailbox (folder). Use list_mailboxes to find the mailbox ID.",
     {
       mailboxId: z.string().describe("The mailbox ID to rename"),
-      newName: z.string().describe("The new name for the mailbox"),
+      newName: z.string().min(1).max(256).describe("The new name for the mailbox"),
     },
     async ({ mailboxId, newName }) => {
       const accountId = await client.getAccountId();
