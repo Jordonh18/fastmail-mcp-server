@@ -178,8 +178,7 @@ npm run prepare        # Pre-install build hook (tsc)
 |----------|------|---------|---------|
 | **CI** | `ci.yml` | Push/PR to `main` | Matrix build & test (Node 18, 20, 22); strict type check |
 | **Deep Testing** | `deep-testing.yml` | Push/PR to `main`, manual | Coverage (>70%), build integrity, dependency audit |
-| **Release** | `release.yml` | Push to `main` | Semantic release — auto-version & GitHub release |
-| **Publish** | `publish.yml` | Release published, manual | npm publish with `--access public --provenance` |
+| **Release** | `release.yml` | Push to `main` | Semantic release — auto-version, GitHub release, and npm publish via trusted publishing |
 
 ### CI Pipeline (`ci.yml`)
 
@@ -196,16 +195,10 @@ npm run prepare        # Pre-install build hook (tsc)
 ### Semantic Release (`release.yml` + `.releaserc.json`)
 
 - **Branches**: `main` only
-- **Plugins**: commit-analyzer → release-notes-generator → npm (no publish) → git (bumps `package.json` + `package-lock.json`) → github
+- **Plugins**: commit-analyzer → release-notes-generator → npm → github
 - **Commit format**: [Conventional Commits](https://www.conventionalcommits.org/) — `fix:` = patch, `feat:` = minor, `BREAKING CHANGE` = major
-- **Release commit message**: `chore(release): ${nextRelease.version} [skip ci]`
-
-### npm Publishing (`publish.yml`)
-
-- Triggered on GitHub release or manual dispatch
-- Runs tests + typecheck before publish
-- Publishes with `--access public --provenance` (SLSA provenance)
-- Uses Node 22, requires `NODE_AUTH_TOKEN` secret
+- **Version source**: derived from commit history and tags; release versions are not committed back to `main`
+- **Publishing**: uses npm trusted publishing from GitHub Actions with `id-token: write` and package `publishConfig.provenance = true`
 
 ## Key Dependencies
 
@@ -222,7 +215,6 @@ npm run prepare        # Pre-install build hook (tsc)
   - `@semantic-release/commit-analyzer` ^13.0.0
   - `@semantic-release/release-notes-generator` ^14.0.0
   - `@semantic-release/npm` ^12.0.0
-  - `@semantic-release/git` ^10.0.0
   - `@semantic-release/github` ^10.0.0
 
 ### Engine Requirement
