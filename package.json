@@ -1,10 +1,10 @@
 {
-  "name": "@jordonh18/fastmail-mcp-server",
-  "version": "1.0.0",
+  "name": "@jordonh19/fastmail-mcp-server",
+  "version": "1.0.1",
   "description": "MCP server for Fastmail — enables AI assistants to read, search, send, and manage emails, calendars, and contacts via the JMAP protocol",
   "type": "module",
   "bin": {
-    "fastmail-mcp": "./dist/index.js"
+    "fastmail-mcp": "dist/index.js"
   },
   "files": [
     "dist"
@@ -20,6 +20,7 @@
     "prepare": "tsc"
   },
   "dependencies": {
+    "@jordonh19/fastmail-mcp-server": "^1.0.0",
     "@modelcontextprotocol/sdk": "^1.27.0",
     "zod": "^3.23.0"
   },
@@ -33,7 +34,7 @@
     "node": ">=18.0.0"
   },
   "license": "MIT",
-  "author": "jordonh18",
+  "author": "jordonh19",
   "keywords": [
     "mcp",
     "mcp-server",

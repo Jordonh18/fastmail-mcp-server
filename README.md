@@ -21,13 +21,13 @@ A Model Context Protocol (MCP) server for Fastmail. Enables any MCP-compatible A
 ### 2. Install
 
 ```bash
-npm install @jordonh18/fastmail-mcp-server
+npm install @jordonh19/fastmail-mcp-server
 ```
 
 Or run directly:
 
 ```bash
-npx @jordonh18/fastmail-mcp-server
+npx @jordonh19/fastmail-mcp-server
 ```
 
 ### 3. Configure
@@ -43,7 +43,7 @@ Add to your Claude Desktop configuration (`claude_desktop_config.json`):
   "mcpServers": {
     "fastmail": {
       "command": "npx",
-      "args": ["@jordonh18/fastmail-mcp-server"],
+      "args": ["@jordonh19/fastmail-mcp-server"],
       "env": {
         "FASTMAIL_API_TOKEN": "your-api-token-here"
       }
@@ -56,7 +56,7 @@ Add to your Claude Desktop configuration (`claude_desktop_config.json`):
 
 ```bash
 export FASTMAIL_API_TOKEN="your-api-token-here"
-claude mcp add fastmail -- npx @jordonh18/fastmail-mcp-server
+claude mcp add fastmail -- npx @jordonh19/fastmail-mcp-server
 ```
 
 #### Cursor
@@ -68,7 +68,7 @@ Add to your Cursor MCP configuration (`.cursor/mcp.json`):
   "mcpServers": {
     "fastmail": {
       "command": "npx",
-      "args": ["@jordonh18/fastmail-mcp-server"],
+      "args": ["@jordonh19/fastmail-mcp-server"],
       "env": {
         "FASTMAIL_API_TOKEN": "your-api-token-here"
       }
@@ -86,7 +86,7 @@ Add to your Windsurf MCP configuration (`~/.codeium/windsurf/mcp_config.json`):
   "mcpServers": {
     "fastmail": {
       "command": "npx",
-      "args": ["@jordonh18/fastmail-mcp-server"],
+      "args": ["@jordonh19/fastmail-mcp-server"],
       "env": {
         "FASTMAIL_API_TOKEN": "your-api-token-here"
       }
@@ -104,7 +104,7 @@ Add to your VS Code MCP configuration (`.vscode/mcp.json`):
   "servers": {
     "fastmail": {
       "command": "npx",
-      "args": ["@jordonh18/fastmail-mcp-server"],
+      "args": ["@jordonh19/fastmail-mcp-server"],
       "env": {
         "FASTMAIL_API_TOKEN": "your-api-token-here"
       }
@@ -118,13 +118,13 @@ Add to your VS Code MCP configuration (`.vscode/mcp.json`):
 For any MCP-compatible client, run the server with the `FASTMAIL_API_TOKEN` environment variable set:
 
 ```bash
-FASTMAIL_API_TOKEN="your-api-token-here" npx @jordonh18/fastmail-mcp-server
+FASTMAIL_API_TOKEN="your-api-token-here" npx @jordonh19/fastmail-mcp-server
 ```
 
 The server communicates over stdio by default, following the standard MCP transport protocol. To run over HTTP instead, use the `--transport` flag:
 
 ```bash
-FASTMAIL_API_TOKEN="your-api-token-here" npx @jordonh18/fastmail-mcp-server --transport http --port 3000
+FASTMAIL_API_TOKEN="your-api-token-here" npx @jordonh19/fastmail-mcp-server --transport http --port 3000
 ```
 
 ## Tools
@@ -198,7 +198,7 @@ The server supports two transport modes:
 Standard input/output transport. Used by most MCP clients (Claude Desktop, Cursor, VS Code, etc.):
 
 ```bash
-FASTMAIL_API_TOKEN="your-token" npx @jordonh18/fastmail-mcp-server
+FASTMAIL_API_TOKEN="your-token" npx @jordonh19/fastmail-mcp-server
 ```
 
 ### HTTP (Streamable HTTP)
@@ -206,7 +206,7 @@ FASTMAIL_API_TOKEN="your-token" npx @jordonh18/fastmail-mcp-server
 Runs as an HTTP server for remote access or multi-client scenarios:
 
 ```bash
-FASTMAIL_API_TOKEN="your-token" npx @jordonh18/fastmail-mcp-server --transport http --port 3000
+FASTMAIL_API_TOKEN="your-token" npx @jordonh19/fastmail-mcp-server --transport http --port 3000
 ```
 
 The HTTP transport exposes a single `/mcp` endpoint that supports the MCP Streamable HTTP protocol.
