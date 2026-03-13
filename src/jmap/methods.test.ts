@@ -140,9 +140,10 @@ describe("emailGet", () => {
 
 describe("emailGetByQueryRef", () => {
   it("creates back-reference to query result", () => {
-    const result = emailGetByQueryRef("q1");
+    const result = emailGetByQueryRef("account-1", "q1");
     expect(result[0]).toBe("Email/get");
     expect(result[1]).toMatchObject({
+      accountId: "account-1",
       "#ids": {
         resultOf: "q1",
         name: "Email/query",
@@ -158,6 +159,7 @@ describe("emailGetByQueryRef", () => {
 
   it("uses custom properties and callId", () => {
     const result = emailGetByQueryRef(
+      "account-1",
       "q1",
       { properties: ["id", "from"], fetchAllBodyValues: true },
       "custom-get",

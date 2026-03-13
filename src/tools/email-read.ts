@@ -124,7 +124,7 @@ export function registerEmailReadTools(server: McpServer, client: JmapClient): v
 
       const response = await client.request([
         emailQuery(accountId, filter, { limit: cappedLimit }, queryCallId),
-        emailGetByQueryRef(queryCallId, undefined, "g"),
+        emailGetByQueryRef(accountId, queryCallId, undefined, "g"),
       ]);
 
       // Find the Email/get response
@@ -302,7 +302,7 @@ export function registerEmailReadTools(server: McpServer, client: JmapClient): v
 
       const response = await client.request([
         emailQuery(accountId, combinedFilter, { limit: cappedLimit }, queryCallId),
-        emailGetByQueryRef(queryCallId, undefined, "ug"),
+        emailGetByQueryRef(accountId, queryCallId, undefined, "ug"),
       ]);
 
       const getResponse = response.methodResponses.find(([name]) => name === "Email/get");
@@ -357,7 +357,7 @@ export function registerEmailReadTools(server: McpServer, client: JmapClient): v
           },
           queryCallId,
         ),
-        emailGetByQueryRef(queryCallId, undefined, "lg"),
+        emailGetByQueryRef(accountId, queryCallId, undefined, "lg"),
       ]);
 
       const getResponse = response.methodResponses.find(([name]) => name === "Email/get");
@@ -413,7 +413,7 @@ export function registerEmailReadTools(server: McpServer, client: JmapClient): v
           },
           queryCallId,
         ),
-        emailGetByQueryRef(queryCallId, undefined, "mg"),
+        emailGetByQueryRef(accountId, queryCallId, undefined, "mg"),
       ]);
 
       const getResponse = response.methodResponses.find(([name]) => name === "Email/get");

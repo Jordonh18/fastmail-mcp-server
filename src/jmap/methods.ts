@@ -98,6 +98,7 @@ export function emailGet(
 }
 
 export function emailGetByQueryRef(
+  accountId: string,
   refCallId: string,
   options?: { properties?: string[]; fetchAllBodyValues?: boolean },
   callId = "email.get",
@@ -105,6 +106,7 @@ export function emailGetByQueryRef(
   return [
     "Email/get",
     {
+      accountId,
       "#ids": {
         resultOf: refCallId,
         name: "Email/query",
