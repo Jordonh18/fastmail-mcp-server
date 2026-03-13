@@ -70,7 +70,7 @@ async function resolveIdentity(
   return identities[0];
 }
 
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const EMAIL_REGEX = /^[^\s@]+@[^\s@.]+(\.[^\s@.]+)+$/;
 
 export function parseAddresses(addresses: string[]): EmailAddress[] {
   return addresses.map((addr) => {
