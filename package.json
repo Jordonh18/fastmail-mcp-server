@@ -1,6 +1,6 @@
 {
   "name": "@jordonh19/fastmail-mcp-server",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "description": "MCP server for Fastmail — enables AI assistants to read, search, send, and manage emails, calendars, and contacts via the JMAP protocol",
   "type": "module",
   "bin": {

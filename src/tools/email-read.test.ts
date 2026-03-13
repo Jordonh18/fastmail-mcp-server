@@ -156,12 +156,31 @@ describe("email-read tools", () => {
   });
 
   describe("tool registration completeness", () => {
-    it("registers search_emails, get_email, get_thread, get_unread_emails, get_latest_emails, get_mailbox_emails", () => {
+    it("registers search_emails, get_email, get_thread, get_unread_emails, get_latest_emails, get_mailbox_emails, get_email_attachments, and download_attachment", () => {
       const server = new McpServer({ name: "test", version: "1.0.0" });
       const client = createMockClient();
 
       // Should not throw during registration
       expect(() => registerEmailReadTools(server, client)).not.toThrow();
+    });
+  });
+
+  describe("attachment list formatting", () => {
+    it("formats attachment entries with blob IDs", () => {
+      const email = makeMockEmail({
+        attachments: [
+          {
+            blobId: "blob-attachment-1",
+            name: "agenda.pdf",
+            type: "application/pdf",
+            size: 2048,
+          },
+        ],
+      });
+
+      expect(email.attachments).toHaveLength(1);
+      expect(email.attachments[0].blobId).toBe("blob-attachment-1");
+      expect(email.attachments[0].name).toBe("agenda.pdf");
     });
   });
 

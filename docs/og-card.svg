@@ -34,7 +34,7 @@
   <rect x="122" y="470" width="178" height="46" rx="23" fill="#FFE2DA"/>
   <rect x="314" y="470" width="132" height="46" rx="23" fill="#DAF2F0"/>
   <rect x="460" y="470" width="150" height="46" rx="23" fill="#F5E6C4"/>
-  <text x="150" y="500" fill="#DB4F31" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="700">37 tools</text>
+  <text x="150" y="500" fill="#DB4F31" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="700">45 tools</text>
   <text x="350" y="500" fill="#1B8F8A" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="700">JMAP</text>
   <text x="495" y="500" fill="#8F6723" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="700">Node 18+</text>
   <circle cx="764" cy="152" r="6" fill="#F8C1B6"/>

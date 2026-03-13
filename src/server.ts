@@ -8,6 +8,7 @@ import { registerEmailManageTools } from "./tools/email-manage.js";
 import { registerCalendarTools } from "./tools/calendar.js";
 import { registerContactTools } from "./tools/contacts.js";
 import { registerSamplingTools } from "./tools/sampling.js";
+import { registerDiagnosticsTools } from "./tools/diagnostics.js";
 
 export function createServer(): McpServer {
   const apiToken = process.env.FASTMAIL_API_TOKEN;
@@ -22,7 +23,7 @@ export function createServer(): McpServer {
 
   const server = new McpServer({
     name: "fastmail",
-    version: "1.0.0",
+    version: "1.1.0",
   });
 
   registerMailboxTools(server, client);
@@ -33,6 +34,7 @@ export function createServer(): McpServer {
   registerCalendarTools(server, client);
   registerContactTools(server, client);
   registerSamplingTools(server, client);
+  registerDiagnosticsTools(server, client);
 
   return server;
 }

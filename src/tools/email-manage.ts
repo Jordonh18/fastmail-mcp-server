@@ -2,7 +2,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { JmapClient } from "../jmap/client.js";
 import { emailQuery, emailSet, mailboxGet } from "../jmap/methods.js";
-import { Mailbox } from "../jmap/types.js";
+import { Mailbox, MethodCall } from "../jmap/types.js";
 
 let cachedTrashId: string | null = null;
 let cachedArchiveId: string | null = null;
@@ -51,6 +51,69 @@ async function getArchiveMailboxId(client: JmapClient): Promise<string> {
   return cachedArchiveId;
 }
 
+function buildMailboxPatch(
+  mailboxIds: string[],
+  enabled: boolean,
+): Record<string, true | null> {
+  const patch: Record<string, true | null> = {};
+  for (const mailboxId of mailboxIds) {
+    patch[`mailboxIds/${mailboxId}`] = enabled ? true : null;
+  }
+  return patch;
+}
+
+function formatMailboxStats(mailbox: Mailbox): string {
+  const role = mailbox.role ? ` (${mailbox.role})` : "";
+  return [
+    `${mailbox.name}${role}`,
+    `ID: ${mailbox.id}`,
+    `Emails: ${mailbox.totalEmails}`,
+    `Unread: ${mailbox.unreadEmails}`,
+    `Threads: ${mailbox.totalThreads}`,
+    `Unread threads: ${mailbox.unreadThreads}`,
+  ].join("\n");
+}
+
+function getUnreadFilter(): Record<string, unknown> {
+  return {
+    operator: "NOT",
+    conditions: [{ hasKeyword: "$seen" }],
+  };
+}
+
+async function queryEmailTotal(
+  client: JmapClient,
+  filter: Record<string, unknown>,
+  callId: string,
+): Promise<number> {
+  const accountId = await client.getAccountId();
+  const queryCall: MethodCall = [
+    "Email/query",
+    {
+      accountId,
+      filter,
+      sort: [{ property: "receivedAt", isAscending: false }],
+      limit: 1,
+      position: 0,
+      collapseThreads: false,
+      calculateTotal: true,
+    },
+    callId,
+  ];
+
+  const response = await client.request([queryCall]);
+  const queryResponse = response.methodResponses.find(
+    ([name, , responseCallId]) => name === "Email/query" && responseCallId === callId,
+  );
+  const data = queryResponse?.[1] as { total?: unknown; ids?: string[] } | undefined;
+
+  if (typeof data?.total === "number") {
+    return data.total;
+  }
+
+  return Array.isArray(data?.ids) ? data.ids.length : 0;
+}
+
 export function registerEmailManageTools(server: McpServer, client: JmapClient): void {
   server.tool(
     "move_email",
@@ -75,6 +138,72 @@ export function registerEmailManageTools(server: McpServer, client: JmapClient):
           {
             type: "text",
             text: `Email ${emailId} moved to mailbox ${mailboxId}`,
+          },
+        ],
+      };
+    },
+  );
+
+  server.tool(
+    "add_labels",
+    "Add one or more mailbox labels to an email without removing its existing mailbox assignments.",
+    {
+      emailId: z.string().describe("The email ID to label"),
+      mailboxIds: z
+        .array(z.string())
+        .min(1)
+        .max(50)
+        .describe("Mailbox IDs to add as labels"),
+    },
+    async ({ emailId, mailboxIds }) => {
+      const accountId = await client.getAccountId();
+
+      await client.request([
+        emailSet(accountId, {
+          update: {
+            [emailId]: buildMailboxPatch(mailboxIds, true),
+          },
+        }),
+      ]);
+
+      return {
+        content: [
+          {
+            type: "text",
+            text: `${mailboxIds.length} label(s) added to email ${emailId}.`,
+          },
+        ],
+      };
+    },
+  );
+
+  server.tool(
+    "remove_labels",
+    "Remove one or more mailbox labels from an email while preserving any other mailbox assignments.",
+    {
+      emailId: z.string().describe("The email ID to update"),
+      mailboxIds: z
+        .array(z.string())
+        .min(1)
+        .max(50)
+        .describe("Mailbox IDs to remove as labels"),
+    },
+    async ({ emailId, mailboxIds }) => {
+      const accountId = await client.getAccountId();
+
+      await client.request([
+        emailSet(accountId, {
+          update: {
+            [emailId]: buildMailboxPatch(mailboxIds, false),
+          },
+        }),
+      ]);
+
+      return {
+        content: [
+          {
+            type: "text",
+            text: `${mailboxIds.length} label(s) removed from email ${emailId}.`,
           },
         ],
       };
@@ -303,6 +432,84 @@ export function registerEmailManageTools(server: McpServer, client: JmapClient):
   );
 
   server.tool(
+    "bulk_add_labels",
+    "Add one or more mailbox labels to multiple emails at once while preserving their other mailbox assignments.",
+    {
+      emailIds: z
+        .array(z.string())
+        .min(1)
+        .max(MAX_BULK_EMAILS)
+        .describe(`Array of email IDs to label (maximum ${MAX_BULK_EMAILS})`),
+      mailboxIds: z
+        .array(z.string())
+        .min(1)
+        .max(50)
+        .describe("Mailbox IDs to add as labels"),
+    },
+    async ({ emailIds, mailboxIds }) => {
+      const accountId = await client.getAccountId();
+      const patch = buildMailboxPatch(mailboxIds, true);
+      const update: Record<string, Record<string, unknown>> = {};
+
+      for (const emailId of emailIds) {
+        update[emailId] = patch;
+      }
+
+      await client.request([
+        emailSet(accountId, { update }),
+      ]);
+
+      return {
+        content: [
+          {
+            type: "text",
+            text: `${mailboxIds.length} label(s) added across ${emailIds.length} email(s).`,
+          },
+        ],
+      };
+    },
+  );
+
+  server.tool(
+    "bulk_remove_labels",
+    "Remove one or more mailbox labels from multiple emails at once while preserving any other mailbox assignments.",
+    {
+      emailIds: z
+        .array(z.string())
+        .min(1)
+        .max(MAX_BULK_EMAILS)
+        .describe(`Array of email IDs to update (maximum ${MAX_BULK_EMAILS})`),
+      mailboxIds: z
+        .array(z.string())
+        .min(1)
+        .max(50)
+        .describe("Mailbox IDs to remove as labels"),
+    },
+    async ({ emailIds, mailboxIds }) => {
+      const accountId = await client.getAccountId();
+      const patch = buildMailboxPatch(mailboxIds, false);
+      const update: Record<string, Record<string, unknown>> = {};
+
+      for (const emailId of emailIds) {
+        update[emailId] = patch;
+      }
+
+      await client.request([
+        emailSet(accountId, { update }),
+      ]);
+
+      return {
+        content: [
+          {
+            type: "text",
+            text: `${mailboxIds.length} label(s) removed across ${emailIds.length} email(s).`,
+          },
+        ],
+      };
+    },
+  );
+
+  server.tool(
     "archive_email",
     "Move one or more emails to the Archive mailbox. A convenient one-step operation for archiving emails you've dealt with.",
     {
@@ -390,6 +597,110 @@ export function registerEmailManageTools(server: McpServer, client: JmapClient):
             text: `${emailIds.length} email(s) marked as read.`,
           },
         ],
+      };
+    },
+  );
+
+  server.tool(
+    "get_mailbox_stats",
+    "Get compact mailbox statistics such as email counts, unread counts, and thread counts. Use this when you need an overview instead of listing mailbox contents.",
+    {
+      mailboxId: z
+        .string()
+        .optional()
+        .describe("Mailbox ID to inspect. If omitted, returns stats for all mailboxes."),
+    },
+    async ({ mailboxId }) => {
+      const mailboxes = await loadMailboxes(client);
+
+      if (mailboxes.length === 0) {
+        return {
+          content: [{ type: "text", text: "No mailboxes found." }],
+        };
+      }
+
+      if (mailboxId) {
+        const mailbox = mailboxes.find((item) => item.id === mailboxId);
+        if (!mailbox) {
+          throw new Error(`Mailbox not found: ${mailboxId}`);
+        }
+
+        return {
+          content: [{ type: "text", text: formatMailboxStats(mailbox) }],
+        };
+      }
+
+      const sorted = [...mailboxes].sort((a, b) => {
+        if (a.role && !b.role) return -1;
+        if (!a.role && b.role) return 1;
+        return b.unreadEmails - a.unreadEmails || b.totalEmails - a.totalEmails || a.name.localeCompare(b.name);
+      });
+
+      return {
+        content: [
+          {
+            type: "text",
+            text: `Mailbox statistics (${sorted.length} total):\n\n${sorted.map(formatMailboxStats).join("\n\n")}`,
+          },
+        ],
+      };
+    },
+  );
+
+  server.tool(
+    "get_account_summary",
+    "Get a compact account-level summary with unique email totals, unread counts, mailbox counts, and top mailboxes. Prefer this over large list calls when you only need an overview.",
+    {},
+    async () => {
+      const mailboxes = await loadMailboxes(client);
+      const totalEmails = await queryEmailTotal(client, {}, "account.summary.total");
+      const unreadEmails = await queryEmailTotal(
+        client,
+        getUnreadFilter(),
+        "account.summary.unread",
+      );
+
+      const systemMailboxes = mailboxes.filter((mailbox) => mailbox.role).length;
+      const customMailboxes = mailboxes.length - systemMailboxes;
+      const unreadMailboxes = mailboxes.filter((mailbox) => mailbox.unreadEmails > 0).length;
+      const topUnread = [...mailboxes]
+        .filter((mailbox) => mailbox.unreadEmails > 0)
+        .sort((a, b) => b.unreadEmails - a.unreadEmails || b.totalEmails - a.totalEmails)
+        .slice(0, 5);
+      const topByVolume = [...mailboxes]
+        .sort((a, b) => b.totalEmails - a.totalEmails || b.unreadEmails - a.unreadEmails)
+        .slice(0, 5);
+
+      const sections = [
+        "Account summary",
+        `Unique emails: ${totalEmails}`,
+        `Unread emails: ${unreadEmails}`,
+        `Mailboxes: ${mailboxes.length} total (${systemMailboxes} system, ${customMailboxes} custom)`,
+        `Mailboxes with unread email: ${unreadMailboxes}`,
+      ];
+
+      if (topUnread.length > 0) {
+        sections.push(
+          "",
+          "Top mailboxes by unread email:",
+          ...topUnread.map(
+            (mailbox, index) => `${index + 1}. ${mailbox.name} — ${mailbox.unreadEmails} unread / ${mailbox.totalEmails} total [id: ${mailbox.id}]`,
+          ),
+        );
+      }
+
+      sections.push(
+        "",
+        "Top mailboxes by volume:",
+        ...topByVolume.map(
+          (mailbox, index) => `${index + 1}. ${mailbox.name} — ${mailbox.totalEmails} total / ${mailbox.unreadEmails} unread [id: ${mailbox.id}]`,
+        ),
+        "",
+        "Note: mailbox totals can overlap because Fastmail mailboxes may also act like labels. The unique email counts above come from account-wide Email/query calls.",
+      );
+
+      return {
+        content: [{ type: "text", text: sections.join("\n") }],
       };
     },
   );

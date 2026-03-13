@@ -7,9 +7,17 @@ export interface JmapSession {
   apiUrl: string;
   downloadUrl: string;
   uploadUrl: string;
-  accounts: Record<string, { name: string; isPersonal: boolean }>;
+  accounts: Record<
+    string,
+    {
+      name: string;
+      isPersonal: boolean;
+      accountCapabilities?: Record<string, unknown>;
+    }
+  >;
   primaryAccounts: Record<string, string>;
   state: string;
+  capabilities?: Record<string, unknown>;
 }
 
 export interface JmapRequest {

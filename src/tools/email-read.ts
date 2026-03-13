@@ -17,6 +17,16 @@ import {
 
 const MAX_ATTACHMENT_SIZE = 10 * 1024 * 1024; // 10 MB
 
+function formatAttachmentSize(size: number): string {
+  if (size >= 1024 * 1024) {
+    return `${Math.round((size / 1024 / 1024) * 10) / 10} MB`;
+  }
+  if (size >= 1024) {
+    return `${Math.round(size / 1024)} KB`;
+  }
+  return `${size} bytes`;
+}
+
 export function registerEmailReadTools(server: McpServer, client: JmapClient): void {
   server.tool(
     "search_emails",
@@ -365,6 +375,63 @@ export function registerEmailReadTools(server: McpServer, client: JmapClient): v
 
       return {
         content: [{ type: "text", text: header + lines.join("\n\n") }],
+      };
+    },
+  );
+
+  server.tool(
+    "get_email_attachments",
+    "List the attachments on a specific email without returning the full email body. Use this when you only need filenames, types, sizes, and blob IDs before calling download_attachment.",
+    {
+      emailId: z.string().describe("The email ID whose attachments should be listed"),
+    },
+    async ({ emailId }) => {
+      const accountId = await client.getAccountId();
+      const response = await client.request([
+        emailGet(
+          accountId,
+          [emailId],
+          {
+            properties: ["id", "subject", "attachments"],
+            fetchAllBodyValues: false,
+          },
+          "email.attachments",
+        ),
+      ]);
+
+      const [, data] = response.methodResponses[0];
+      const emails = (data.list as Email[]) ?? [];
+
+      if (emails.length === 0) {
+        throw new Error(`Email not found: ${emailId}`);
+      }
+
+      const email = emails[0];
+      const attachments = email.attachments ?? [];
+
+      if (attachments.length === 0) {
+        return {
+          content: [
+            {
+              type: "text",
+              text: `Email \"${email.subject || "(no subject)"}\" has no attachments.`,
+            },
+          ],
+        };
+      }
+
+      const lines = attachments.map((attachment, index) => {
+        const name = attachment.name || "unnamed";
+        return `${index + 1}. ${name} (${attachment.type}, ${formatAttachmentSize(attachment.size)}) [blobId: ${attachment.blobId}]`;
+      });
+
+      return {
+        content: [
+          {
+            type: "text",
+            text: `Attachments for \"${email.subject || "(no subject)"}\" (${attachments.length} total):\n\n${lines.join("\n")}`,
+          },
+        ],
       };
     },
   );

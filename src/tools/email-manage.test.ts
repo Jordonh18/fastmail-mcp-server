@@ -32,10 +32,40 @@ describe("email-manage tools", () => {
   });
 
   describe("tool registration", () => {
-    it("registers move_email, update_email_flags, delete_email, bulk_email_action, archive_email, mark_mailbox_read", () => {
+    it("registers move_email, label tools, stats tools, update_email_flags, delete_email, bulk_email_action, archive_email, and mark_mailbox_read", () => {
       const server = new McpServer({ name: "test", version: "1.0.0" });
       const client = createMockClient();
       expect(() => registerEmailManageTools(server, client)).not.toThrow();
+    });
+  });
+
+  describe("label patch construction", () => {
+    it("builds add-label mailbox patch entries", () => {
+      const mailboxIds = ["mb-1", "mb-2"];
+      const patch: Record<string, true | null> = {};
+
+      for (const mailboxId of mailboxIds) {
+        patch[`mailboxIds/${mailboxId}`] = true;
+      }
+
+      expect(patch).toEqual({
+        "mailboxIds/mb-1": true,
+        "mailboxIds/mb-2": true,
+      });
+    });
+
+    it("builds remove-label mailbox patch entries", () => {
+      const mailboxIds = ["mb-1", "mb-2"];
+      const patch: Record<string, true | null> = {};
+
+      for (const mailboxId of mailboxIds) {
+        patch[`mailboxIds/${mailboxId}`] = null;
+      }
+
+      expect(patch).toEqual({
+        "mailboxIds/mb-1": null,
+        "mailboxIds/mb-2": null,
+      });
     });
   });
 

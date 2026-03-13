@@ -131,63 +131,64 @@ FASTMAIL_API_TOKEN="your-api-token-here" npx @jordonh19/fastmail-mcp-server --tr
 
 ### Email
 
-| Tool | Description |
-|------|-------------|
-| `search_emails` | Search emails by mailbox, text, sender, date range, attachments, etc. |
-| `get_email` | Get full email content by ID |
-| `get_thread` | Get all emails in a conversation thread |
-| `get_unread_emails` | Quickly retrieve unread emails, optionally filtered by mailbox |
-| `get_latest_emails` | Get the most recent emails from all or a specific mailbox |
-| `get_mailbox_emails` | List emails in a specific mailbox with pagination |
-| `send_email` | Compose and send a new email |
-| `reply_email` | Reply or reply-all to an email |
-| `forward_email` | Forward an email to new recipients |
-| `create_draft` | Save an email as a draft without sending |
-| `send_draft` | Send a previously saved draft email |
-| `move_email` | Move an email to a different mailbox |
-| `update_email_flags` | Mark emails as read/unread or flagged/unflagged |
-| `delete_email` | Move to Trash or permanently delete |
-| `bulk_email_action` | Perform actions on multiple emails at once (mark read/unread, flag, move, delete) |
-| `archive_email` | Move one or more emails to the Archive mailbox |
-| `mark_mailbox_read` | Mark all emails in a mailbox as read |
-| `download_attachment` | Download an email attachment by blob ID |
+- `search_emails`: Search emails by mailbox, text, sender, date range, attachments, and more.
+- `get_email`: Get full email content by ID.
+- `get_thread`: Get all emails in a conversation thread.
+- `get_unread_emails`: Quickly retrieve unread emails, optionally filtered by mailbox.
+- `get_latest_emails`: Get the most recent emails from all or a specific mailbox.
+- `get_mailbox_emails`: List emails in a specific mailbox with pagination.
+- `get_email_attachments`: List attachments on an email without returning the full message body.
+- `send_email`: Compose and send a new email.
+- `reply_email`: Reply or reply-all to an email.
+- `forward_email`: Forward an email to new recipients.
+- `create_draft`: Save an email as a draft without sending.
+- `send_draft`: Send a previously saved draft email.
+- `move_email`: Move an email to a different mailbox.
+- `add_labels`: Add mailbox labels to an email while preserving existing mailbox assignments.
+- `remove_labels`: Remove mailbox labels from an email while preserving other mailbox assignments.
+- `update_email_flags`: Mark emails as read/unread or flagged/unflagged.
+- `delete_email`: Move to Trash or permanently delete.
+- `bulk_email_action`: Perform actions on multiple emails at once.
+- `bulk_add_labels`: Add mailbox labels to multiple emails at once.
+- `bulk_remove_labels`: Remove mailbox labels from multiple emails at once.
+- `archive_email`: Move one or more emails to the Archive mailbox.
+- `mark_mailbox_read`: Mark all emails in a mailbox as read.
+- `get_mailbox_stats`: Get compact mailbox-level unread, email, and thread counts.
+- `get_account_summary`: Get a compact account overview with unique email totals and top mailboxes.
+- `download_attachment`: Download an email attachment by blob ID.
 
 ### Mailbox
 
-| Tool | Description |
-|------|-------------|
-| `list_mailboxes` | List all mailboxes/folders with roles and email counts |
-| `create_mailbox` | Create a new mailbox/folder |
-| `rename_mailbox` | Rename an existing mailbox/folder |
-| `delete_mailbox` | Delete a mailbox/folder (with optional force delete) |
+- `list_mailboxes`: List all mailboxes or folders with roles and email counts.
+- `create_mailbox`: Create a new mailbox or folder.
+- `rename_mailbox`: Rename an existing mailbox or folder.
+- `delete_mailbox`: Delete a mailbox or folder, optionally with force delete.
 
 ### Calendar
 
-| Tool | Description |
-|------|-------------|
-| `list_calendars` | List all calendars with names, colors, and visibility |
-| `get_calendar_events` | Search/list calendar events by date range, calendar, or title |
-| `get_calendar_event` | Get full details of a specific calendar event |
-| `create_calendar_event` | Create a new calendar event with location, participants, and alerts |
-| `update_calendar_event` | Update an existing calendar event |
-| `delete_calendar_event` | Delete a calendar event |
+- `list_calendars`: List all calendars with names, colors, and visibility.
+- `get_calendar_events`: Search or list calendar events by date range, calendar, or title.
+- `get_calendar_event`: Get full details of a specific calendar event.
+- `create_calendar_event`: Create a new calendar event with location, participants, and alerts.
+- `update_calendar_event`: Update an existing calendar event.
+- `delete_calendar_event`: Delete a calendar event.
 
 ### Contacts
 
-| Tool | Description |
-|------|-------------|
-| `list_address_books` | List all address books (contact groups) |
-| `search_contacts` | Search contacts by name, email, or other criteria |
-| `get_contact` | Get full details of a specific contact |
-| `create_contact` | Create a new contact with email, phone, organization, etc. |
-| `update_contact` | Update an existing contact's information |
-| `delete_contact` | Delete a contact |
+- `list_address_books`: List all address books or contact groups.
+- `search_contacts`: Search contacts by name, email, or other criteria.
+- `get_contact`: Get full details of a specific contact.
+- `create_contact`: Create a new contact with email, phone, organization, and more.
+- `update_contact`: Update an existing contact's information.
+- `delete_contact`: Delete a contact.
 
 ### Identity
 
-| Tool | Description |
-|------|-------------|
-| `get_identities` | List available sender identities |
+- `get_identities`: List available sender identities.
+
+### Diagnostics
+
+- `check_function_availability`: Check which Fastmail feature groups and MCP client capabilities are available, with setup guidance for missing access.
 
 ## Transport Modes
 
@@ -217,9 +218,7 @@ The server can be configured via environment variables or a JSON config file.
 
 ### Environment Variables
 
-| Variable | Required | Description |
-|----------|----------|-------------|
-| `FASTMAIL_API_TOKEN` | Yes | Fastmail API token with JMAP access |
+- `FASTMAIL_API_TOKEN`: Required. Fastmail API token with JMAP access.
 
 ### Config File
 
@@ -233,6 +232,7 @@ Create a `.fastmail-mcp.json` file in your project root or home directory:
 ```
 
 The server searches for config files in this order:
+
 1. `./.fastmail-mcp.json` (current directory)
 2. `~/.fastmail-mcp.json` (home directory)
 

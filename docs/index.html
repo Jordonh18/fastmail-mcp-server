@@ -6,7 +6,7 @@
     <title>Fastmail MCP Server | Fastmail Email, Calendar, and Contacts for MCP Clients</title>
     <meta
       name="description"
-      content="Open-source Fastmail MCP server for Claude Desktop, VS Code, Cursor, Windsurf, and custom MCP clients. Connect Fastmail email, calendars, contacts, and mailboxes over JMAP with a TypeScript server."
+      content="Open-source Fastmail MCP server for Claude Desktop, VS Code, Cursor, Windsurf, and custom MCP clients. Connect Fastmail email, calendars, contacts, labels, analytics, and diagnostics over JMAP with a TypeScript server."
     />
     <meta
       name="keywords"
@@ -28,7 +28,7 @@
     <meta property="og:title" content="Fastmail MCP Server for Claude, VS Code, Cursor, and MCP Clients" />
     <meta
       property="og:description"
-      content="Connect Fastmail email, calendars, contacts, and mailbox tools to MCP-compatible assistants over JMAP with an open-source TypeScript server."
+      content="Connect Fastmail email, calendars, contacts, labels, mailbox analytics, and diagnostics to MCP-compatible assistants over JMAP with an open-source TypeScript server."
     />
     <meta property="og:image" content="https://fastmail.jordonh.me/og-card.svg" />
     <meta
@@ -39,7 +39,7 @@
     <meta name="twitter:title" content="Fastmail MCP Server for Claude, VS Code, Cursor, and MCP Clients" />
     <meta
       name="twitter:description"
-      content="Open-source Fastmail MCP server for email, calendar, contacts, mailbox management, and AI-assisted workflows over JMAP."
+      content="Open-source Fastmail MCP server for email, calendar, contacts, labels, mailbox analytics, diagnostics, and AI-assisted workflows over JMAP."
     />
     <meta name="twitter:image" content="https://fastmail.jordonh.me/og-card.svg" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -57,7 +57,7 @@
             "@id": "https://fastmail.jordonh.me/#website",
             "url": "https://fastmail.jordonh.me/",
             "name": "Fastmail MCP Server",
-            "description": "Open-source Fastmail MCP server for email, calendars, contacts, and mailbox workflows over JMAP.",
+            "description": "Open-source Fastmail MCP server for email, calendars, contacts, labels, analytics, and mailbox workflows over JMAP.",
             "inLanguage": "en"
           },
           {
@@ -67,7 +67,7 @@
             "url": "https://fastmail.jordonh.me/",
             "codeRepository": "https://github.com/Jordonh18/fastmail-mcp-server",
             "downloadUrl": "https://www.npmjs.com/package/@jordonh19/fastmail-mcp-server",
-            "description": "A TypeScript Model Context Protocol server for Fastmail that exposes email, calendar, contacts, mailbox, and AI-assisted tools over JMAP.",
+            "description": "A TypeScript Model Context Protocol server for Fastmail that exposes email, calendar, contacts, mailbox, diagnostics, analytics, and AI-assisted tools over JMAP.",
             "programmingLanguage": ["TypeScript", "JavaScript"],
             "runtimePlatform": "Node.js",
             "license": "https://opensource.org/license/mit",
@@ -159,7 +159,8 @@
               Use one package to search inboxes, send mail, manage drafts,
               browse contacts, coordinate calendars, and automate mailbox
               workflows without building a custom Fastmail integration from
-              scratch.
+              scratch. Version 1.1.0 adds label tools, mailbox and account
+              summaries, attachment listing, and setup diagnostics.
             </p>
 
             <div class="hero-actions">
@@ -176,19 +177,19 @@
             <ul class="trust-strip" aria-label="Project highlights">
               <li>
                 <strong>Open source</strong>
-                <span>TypeScript codebase with semantic-release automation</span>
+                <span>TypeScript codebase with CI and release workflow automation</span>
               </li>
               <li>
                 <strong>Fastmail JMAP</strong>
                 <span>Email, calendars, contacts, attachments, and mailbox actions</span>
               </li>
               <li>
-                <strong>37 tools</strong>
-                <span>Focused tool groups instead of one oversized API surface</span>
+                <strong>45 tools</strong>
+                <span>Focused groups for labels, analytics, diagnostics, and day-to-day Fastmail workflows</span>
               </li>
               <li>
-                <strong>Node 18+</strong>
-                <span>Published as <code>@jordonh19/fastmail-mcp-server</code></span>
+                <strong>v1.1.0</strong>
+                <span>Published as <code>@jordonh19/fastmail-mcp-server</code> for Node 18+</span>
               </li>
             </ul>
           </div>
@@ -224,7 +225,8 @@ npx @jordonh19/fastmail-mcp-server --transport http --port 3000</code></pre>
           <p class="section-blurb">
             This Fastmail MCP server gives AI assistants a controlled, practical
             tool surface for reading and sending email, handling calendar events,
-            updating contacts, managing mailboxes, and using sampling-enabled
+            updating contacts, managing mailboxes, checking capability access,
+            reviewing mailbox and account summaries, and using sampling-enabled
             reply helpers where the client supports them.
           </p>
 
@@ -233,7 +235,8 @@ npx @jordonh19/fastmail-mcp-server --transport http --port 3000</code></pre>
               <h3>Email operations</h3>
               <p>
                 Search, read, thread, reply, forward, draft, archive, move,
-                flag, bulk-manage, and download attachments.
+                label, summarize, bulk-manage, inspect attachments, and review
+                mailbox or account-level email summaries.
               </p>
             </article>
             <article class="capability-card accent-calendar">
@@ -357,16 +360,16 @@ npx @jordonh19/fastmail-mcp-server --transport http --port 3000</code></pre>
           <p class="section-blurb">
             Search engines and humans both need specificity, so the tool surface
             is intentionally split into email read, email write, email manage,
-            mailbox, calendar, contacts, identity, and sampling groups. That
-            makes it easier to understand what the Fastmail MCP server can do at
-            a glance.
+            mailbox, calendar, contacts, identity, sampling, and diagnostics
+            groups. That makes it easier to understand what the Fastmail MCP
+            server can do at a glance.
           </p>
 
           <div class="tool-grid">
             <article class="tool-card">
-              <span class="tool-count">7</span>
+              <span class="tool-count">8</span>
               <h3>Email read</h3>
-              <p>Search, open, inspect threads, fetch unread mail, and browse mailboxes.</p>
+              <p>Search, open, inspect threads, fetch unread mail, browse mailboxes, and list attachments.</p>
             </article>
             <article class="tool-card">
               <span class="tool-count">5</span>
@@ -374,9 +377,9 @@ npx @jordonh19/fastmail-mcp-server --transport http --port 3000</code></pre>
               <p>Compose new mail, reply, forward, save drafts, and send drafts.</p>
             </article>
             <article class="tool-card">
-              <span class="tool-count">6</span>
+              <span class="tool-count">12</span>
               <h3>Email manage</h3>
-              <p>Move, delete, archive, flag, bulk update, and mark a mailbox read.</p>
+              <p>Move, label, delete, archive, flag, bulk update, inspect stats, and mark a mailbox read.</p>
             </article>
             <article class="tool-card">
               <span class="tool-count">4</span>
@@ -402,6 +405,11 @@ npx @jordonh19/fastmail-mcp-server --transport http --port 3000</code></pre>
               <span class="tool-count">2</span>
               <h3>Sampling</h3>
               <p>Use MCP client sampling to summarize mail or suggest a context-aware reply.</p>
+            </article>
+            <article class="tool-card">
+              <span class="tool-count">1</span>
+              <h3>Diagnostics</h3>
+              <p>Check Fastmail capability availability and guide setup when token scopes or client features are missing.</p>
             </article>
           </div>
         </section>
@@ -449,8 +457,8 @@ npx @jordonh19/fastmail-mcp-server --transport http --port 3000</code></pre>
               <h3>What is Fastmail MCP Server?</h3>
               <p>
                 It is an open-source MCP server for Fastmail that exposes email,
-                calendar, contacts, mailbox, identity, and sampling-oriented
-                tools over the Fastmail JMAP API.
+                calendar, contacts, mailbox, identity, diagnostics, analytics,
+                and sampling-oriented tools over the Fastmail JMAP API.
               </p>
             </article>
             <article class="faq-item">
@@ -474,8 +482,9 @@ npx @jordonh19/fastmail-mcp-server --transport http --port 3000</code></pre>
               <p>
                 Yes. It supports searching and reading mail, replying,
                 forwarding, creating drafts, sending drafts, moving mail,
-                updating flags, archiving, deleting, and downloading
-                attachments.
+                adding and removing labels, updating flags, archiving,
+                deleting, downloading attachments, and inspecting mailbox or
+                account summaries.
               </p>
             </article>
             <article class="faq-item">
