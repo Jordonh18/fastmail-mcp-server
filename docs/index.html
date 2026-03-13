@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Fastmail MCP Server</title>
+    <meta
+      name="description"
+      content="A clean MCP server for Fastmail with email, calendar, contacts, mailbox, and AI-assisted workflows over JMAP."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Space+Grotesk:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="page-shell">
+      <header class="topbar">
+        <a class="brand" href="#hero">Fastmail MCP Server</a>
+        <nav class="topnav" aria-label="Primary">
+          <a href="#capabilities">Capabilities</a>
+          <a href="#quickstart">Quick Start</a>
+          <a href="#tooling">Tooling</a>
+        </nav>
+      </header>
+
+      <main>
+        <section class="hero" id="hero">
+          <div class="hero-copy">
+            <p class="eyebrow">Fastmail · MCP · JMAP</p>
+            <h1>Give your Fastmail account a serious MCP interface.</h1>
+            <p class="lede">
+              Fastmail MCP Server connects MCP-compatible assistants to email,
+              calendars, contacts, and mailbox operations through a focused
+              TypeScript server with stdio and HTTP transport support.
+            </p>
+
+            <div class="hero-actions">
+              <a class="button button-primary" href="#quickstart">Start With npx</a>
+              <a
+                class="button button-secondary"
+                href="https://github.com/Jordonh18/fastmail-mcp-server"
+                target="_blank"
+                rel="noreferrer"
+                >View Repository</a
+              >
+            </div>
+
+            <ul class="stat-strip" aria-label="Project highlights">
+              <li>
+                <strong>37 tools</strong>
+                <span>Email, contacts, calendar, mailbox, AI helpers</span>
+              </li>
+              <li>
+                <strong>2 transports</strong>
+                <span>stdio by default, HTTP when you need it</span>
+              </li>
+              <li>
+                <strong>Node 18+</strong>
+                <span>Published as <code>@jordonh19/fastmail-mcp-server</code></span>
+              </li>
+            </ul>
+          </div>
+
+          <aside class="hero-panel" aria-label="Quick install">
+            <div class="terminal-card">
+              <div class="terminal-chrome">
+                <span></span>
+                <span></span>
+                <span></span>
+              </div>
+              <pre><code>npm install @jordonh19/fastmail-mcp-server
+
+FASTMAIL_API_TOKEN="your-api-token" \
+npx @jordonh19/fastmail-mcp-server
+
+# HTTP mode
+FASTMAIL_API_TOKEN="your-api-token" \
+npx @jordonh19/fastmail-mcp-server --transport http --port 3000</code></pre>
+            </div>
+            <p class="panel-note">
+              Works with Claude Desktop, VS Code, Cursor, Windsurf, and other
+              MCP-compatible clients.
+            </p>
+          </aside>
+        </section>
+
+        <section class="section" id="capabilities">
+          <div class="section-heading">
+            <p class="eyebrow">Capabilities</p>
+            <h2>Built for real inbox and calendar workflows.</h2>
+          </div>
+
+          <div class="capability-grid">
+            <article class="capability-card accent-mail">
+              <h3>Email operations</h3>
+              <p>
+                Search, read, thread, reply, forward, draft, archive, move,
+                flag, bulk-manage, and download attachments.
+              </p>
+            </article>
+            <article class="capability-card accent-calendar">
+              <h3>Calendar control</h3>
+              <p>
+                List calendars, query events, create meetings, update attendees,
+                manage alerts, and delete events cleanly.
+              </p>
+            </article>
+            <article class="capability-card accent-contacts">
+              <h3>Contacts and address books</h3>
+              <p>
+                Search contacts, create new cards, patch organizations and phone
+                details, and work across address books.
+              </p>
+            </article>
+            <article class="capability-card accent-ai">
+              <h3>AI-assisted helpers</h3>
+              <p>
+                Sampling-enabled clients can summarize an email or draft a reply
+                aligned to a specific intent.
+              </p>
+            </article>
+          </div>
+        </section>
+
+        <section class="section" id="quickstart">
+          <div class="section-heading">
+            <p class="eyebrow">Quick Start</p>
+            <h2>Minimal setup, clean transport model.</h2>
+          </div>
+
+          <div class="quickstart-grid">
+            <article class="info-card">
+              <h3>1. Create a Fastmail API token</h3>
+              <p>
+                Generate a token with Mail, Calendars, and Contacts access from
+                Fastmail settings.
+              </p>
+            </article>
+            <article class="info-card">
+              <h3>2. Run the server</h3>
+              <p>
+                Use stdio for local MCP clients, or switch to HTTP with
+                <code>--transport http</code> and <code>--port</code>.
+              </p>
+            </article>
+            <article class="info-card wide-card">
+              <h3>3. Drop it into your client config</h3>
+              <pre><code>{
+  "servers": {
+    "fastmail": {
+      "command": "npx",
+      "args": ["@jordonh19/fastmail-mcp-server"],
+      "env": {
+        "FASTMAIL_API_TOKEN": "your-api-token-here"
+      }
+    }
+  }
+}</code></pre>
+            </article>
+          </div>
+        </section>
+
+        <section class="section" id="tooling">
+          <div class="section-heading">
+            <p class="eyebrow">Tool Surface</p>
+            <h2>Organized into focused groups instead of a giant API blob.</h2>
+          </div>
+
+          <div class="tool-grid">
+            <article class="tool-card">
+              <span class="tool-count">7</span>
+              <h3>Email read</h3>
+              <p>Search, open, inspect threads, fetch unread mail, and browse mailboxes.</p>
+            </article>
+            <article class="tool-card">
+              <span class="tool-count">5</span>
+              <h3>Email write</h3>
+              <p>Compose new mail, reply, forward, save drafts, and send drafts.</p>
+            </article>
+            <article class="tool-card">
+              <span class="tool-count">6</span>
+              <h3>Email manage</h3>
+              <p>Move, delete, archive, flag, bulk update, and mark a mailbox read.</p>
+            </article>
+            <article class="tool-card">
+              <span class="tool-count">4</span>
+              <h3>Mailbox</h3>
+              <p>Create, rename, list, and remove folders with Fastmail role awareness.</p>
+            </article>
+            <article class="tool-card">
+              <span class="tool-count">6</span>
+              <h3>Calendar</h3>
+              <p>Query events and manage schedules, participants, reminders, and locations.</p>
+            </article>
+            <article class="tool-card">
+              <span class="tool-count">6</span>
+              <h3>Contacts</h3>
+              <p>Work with address books and contact cards across personal and work details.</p>
+            </article>
+            <article class="tool-card">
+              <span class="tool-count">1</span>
+              <h3>Identity</h3>
+              <p>Discover available sender identities before sending mail.</p>
+            </article>
+            <article class="tool-card">
+              <span class="tool-count">2</span>
+              <h3>Sampling</h3>
+              <p>Use MCP client sampling to summarize mail or suggest a context-aware reply.</p>
+            </article>
+          </div>
+        </section>
+      </main>
+
+      <footer class="footer">
+        <p>Fastmail MCP Server is a TypeScript MCP server for Fastmail over JMAP.</p>
+        <div class="footer-links">
+          <a href="https://github.com/Jordonh18/fastmail-mcp-server" target="_blank" rel="noreferrer">GitHub</a>
+          <a href="https://www.npmjs.com/package/@jordonh19/fastmail-mcp-server" target="_blank" rel="noreferrer">npm</a>
+          <a href="https://www.fastmail.com" target="_blank" rel="noreferrer">Fastmail</a>
+        </div>
+      </footer>
+    </div>
+  </body>
+</html>
