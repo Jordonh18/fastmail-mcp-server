@@ -1,8 +1,8 @@
-# Copilot Instructions for Fastmail MCP Connector
+# Copilot Instructions for Fastmail MCP Server
 
 ## Project Overview
 
-This is a Model Context Protocol (MCP) connector for Fastmail that enables AI assistants (like Claude) to interact with Fastmail accounts via the JMAP protocol. It provides tools for managing emails, calendars, contacts, and mailboxes.
+This is a Model Context Protocol (MCP) server for Fastmail that enables AI assistants to interact with Fastmail accounts via the JMAP protocol. It provides tools for managing emails, calendars, contacts, and mailboxes.
 
 ## Architecture
 
@@ -108,7 +108,7 @@ npm run dev          # Watch mode build
 
 ## JMAP Capabilities
 
-The connector uses these JMAP capability URIs:
+The server uses these JMAP capability URIs:
 
 - `urn:ietf:params:jmap:core` — Core JMAP
 - `urn:ietf:params:jmap:mail` — Email operations

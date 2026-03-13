@@ -350,4 +350,114 @@ describe("JmapClient", () => {
       expect(fetchMock).toHaveBeenCalledTimes(4);
     });
   });
+
+  describe("downloadBlob", () => {
+    it("downloads a blob using the session download URL template", async () => {
+      const blobContent = new Uint8Array([72, 101, 108, 108, 111]); // "Hello"
+      const fetchMock = vi.fn()
+        .mockResolvedValueOnce({
+          ok: true,
+          status: 200,
+          json: () => Promise.resolve(MOCK_SESSION),
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          status: 200,
+          headers: new Map([["content-type", "text/plain"]]),
+          arrayBuffer: () => Promise.resolve(blobContent.buffer),
+        });
+
+      // Mock headers.get for the download response
+      fetchMock.mockImplementation(async (url: string, options: unknown) => {
+        if (url === "https://api.fastmail.com/jmap/session") {
+          return {
+            ok: true,
+            status: 200,
+            json: () => Promise.resolve(MOCK_SESSION),
+          };
+        }
+        return {
+          ok: true,
+          status: 200,
+          headers: { get: (name: string) => name === "content-type" ? "text/plain" : null },
+          arrayBuffer: () => Promise.resolve(blobContent.buffer),
+        };
+      });
+
+      globalThis.fetch = fetchMock;
+
+      const client = new JmapClient({ apiToken: "test-token" });
+      const result = await client.downloadBlob("blob-123", "test.txt");
+
+      expect(result.contentType).toBe("text/plain");
+      expect(result.content).toBeInstanceOf(Buffer);
+
+      // Verify the download URL was constructed correctly
+      const downloadCall = fetchMock.mock.calls.find((call: unknown[]) =>
+        (call[0] as string).includes("blob-123"),
+      );
+      expect(downloadCall).toBeDefined();
+      expect(downloadCall![0]).toContain("acc-123");
+      expect(downloadCall![0]).toContain("blob-123");
+      expect(downloadCall![0]).toContain("test.txt");
+    });
+
+    it("throws on 401 during download", async () => {
+      const fetchMock = vi.fn()
+        .mockResolvedValueOnce({
+          ok: true,
+          status: 200,
+          json: () => Promise.resolve(MOCK_SESSION),
+        })
+        .mockResolvedValueOnce({
+          ok: false,
+          status: 401,
+          statusText: "Unauthorized",
+          headers: { get: () => null },
+        });
+      globalThis.fetch = fetchMock;
+
+      const client = new JmapClient({ apiToken: "test-token" });
+      await expect(
+        client.downloadBlob("blob-123", "test.txt"),
+      ).rejects.toThrow("Authentication failed");
+    });
+
+    it("throws on download failure", async () => {
+      const fetchMock = vi.fn()
+        .mockResolvedValueOnce({
+          ok: true,
+          status: 200,
+          json: () => Promise.resolve(MOCK_SESSION),
+        })
+        .mockResolvedValueOnce({
+          ok: false,
+          status: 404,
+          statusText: "Not Found",
+          headers: { get: () => null },
+        });
+      globalThis.fetch = fetchMock;
+
+      const client = new JmapClient({ apiToken: "test-token" });
+      await expect(
+        client.downloadBlob("blob-123", "test.txt"),
+      ).rejects.toThrow("Failed to download attachment");
+    });
+
+    it("handles network errors during download", async () => {
+      const fetchMock = vi.fn()
+        .mockResolvedValueOnce({
+          ok: true,
+          status: 200,
+          json: () => Promise.resolve(MOCK_SESSION),
+        })
+        .mockRejectedValueOnce(new Error("Connection reset"));
+      globalThis.fetch = fetchMock;
+
+      const client = new JmapClient({ apiToken: "test-token" });
+      await expect(
+        client.downloadBlob("blob-123", "test.txt"),
+      ).rejects.toThrow("Network error downloading attachment");
+    });
+  });
 });

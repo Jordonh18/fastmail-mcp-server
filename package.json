@@ -1,7 +1,7 @@
 {
-  "name": "@jordonh18/fastmail-connector",
+  "name": "@jordonh18/fastmail-mcp-server",
   "version": "1.0.0",
-  "description": "MCP connector for Fastmail — enables Claude to read, search, send, and manage emails via the JMAP protocol",
+  "description": "MCP server for Fastmail — enables AI assistants to read, search, send, and manage emails, calendars, and contacts via the JMAP protocol",
   "type": "module",
   "bin": {
     "fastmail-mcp": "./dist/index.js"
@@ -36,9 +36,13 @@
   "author": "jordonh18",
   "keywords": [
     "mcp",
+    "mcp-server",
+    "model-context-protocol",
     "fastmail",
     "jmap",
     "email",
-    "claude"
+    "calendar",
+    "contacts",
+    "ai"
   ]
 }

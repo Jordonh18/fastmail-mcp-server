@@ -201,7 +201,7 @@ export function registerEmailReadTools(server: McpServer, client: JmapClient): v
         for (const att of email.attachments) {
           const name = att.name || "unnamed";
           const size = att.size > 1024 ? `${Math.round(att.size / 1024)} KB` : `${att.size} bytes`;
-          sections.push(`  ${name} (${att.type}, ${size})`);
+          sections.push(`  ${name} (${att.type}, ${size}) [blobId: ${att.blobId}]`);
         }
       }
 
@@ -434,6 +434,56 @@ export function registerEmailReadTools(server: McpServer, client: JmapClient): v
 
       return {
         content: [{ type: "text", text: header + lines.join("\n\n") }],
+      };
+    },
+  );
+
+  server.tool(
+    "download_attachment",
+    "Download an email attachment by its blob ID. Use get_email first to find attachment blob IDs. Returns the attachment content as base64-encoded data.",
+    {
+      blobId: z.string().describe("The blob ID of the attachment (from get_email attachment listing)"),
+      name: z.string().optional().default("attachment").describe("Filename for the download"),
+    },
+    async ({ blobId, name }) => {
+      const { content, contentType } = await client.downloadBlob(blobId, name);
+
+      const isText = contentType.startsWith("text/") ||
+        contentType === "application/json" ||
+        contentType === "application/xml";
+
+      if (isText) {
+        const text = content.toString("utf-8");
+        return {
+          content: [{ type: "text", text: `Attachment: ${name} (${contentType})\n\n${text}` }],
+        };
+      }
+
+      const isImage = contentType.startsWith("image/");
+
+      if (isImage) {
+        return {
+          content: [
+            {
+              type: "text",
+              text: `Attachment: ${name} (${contentType}, ${content.length} bytes)`,
+            },
+            {
+              type: "image" as const,
+              data: content.toString("base64"),
+              mimeType: contentType,
+            },
+          ],
+        };
+      }
+
+      return {
+        content: [
+          {
+            type: "text",
+            text: `Attachment: ${name} (${contentType}, ${content.length} bytes)\n\nBase64 content:\n${content.toString("base64")}`,
+          },
+        ],
       };
     },
   );
