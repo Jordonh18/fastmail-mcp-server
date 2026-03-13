@@ -1,0 +1,50 @@
+<svg width="1200" height="630" viewBox="0 0 1200 630" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="84" y1="54" x2="1081" y2="596" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FBF6ED"/>
+      <stop offset="1" stop-color="#EFE3D4"/>
+    </linearGradient>
+    <linearGradient id="panel" x1="782" y1="142" x2="1088" y2="516" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#13223D"/>
+      <stop offset="1" stop-color="#1B2F55"/>
+    </linearGradient>
+    <filter id="shadow" x="40" y="34" width="1120" height="566" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feFlood flood-opacity="0" result="BackgroundImageFix"/>
+      <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
+      <feOffset dy="14"/>
+      <feGaussianBlur stdDeviation="18"/>
+      <feComposite in2="hardAlpha" operator="out"/>
+      <feColorMatrix type="matrix" values="0 0 0 0 0.0666667 0 0 0 0 0.129412 0 0 0 0 0.231373 0 0 0 0.18 0"/>
+      <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_0_1"/>
+      <feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow_0_1" result="shape"/>
+    </filter>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <circle cx="151" cy="119" r="132" fill="#DF9F35" fill-opacity="0.18"/>
+  <circle cx="1047" cy="104" r="91" fill="#1B8F8A" fill-opacity="0.18"/>
+  <g filter="url(#shadow)">
+    <rect x="76" y="56" width="1048" height="494" rx="32" fill="#FFF9F1" fill-opacity="0.84"/>
+    <rect x="724" y="120" width="320" height="318" rx="28" fill="url(#panel)"/>
+  </g>
+  <text x="122" y="164" fill="#DB4F31" font-family="Segoe UI, Arial, sans-serif" font-size="28" font-weight="700" letter-spacing="4">FASTMAIL · MCP · JMAP</text>
+  <text x="122" y="250" fill="#11213B" font-family="Georgia, 'Times New Roman', serif" font-size="68" font-weight="700">Fastmail MCP</text>
+  <text x="122" y="328" fill="#11213B" font-family="Georgia, 'Times New Roman', serif" font-size="68" font-weight="700">Server</text>
+  <text x="122" y="390" fill="#56617A" font-family="Segoe UI, Arial, sans-serif" font-size="30">Email, calendar, contacts, mailbox tools, and AI helpers</text>
+  <text x="122" y="432" fill="#56617A" font-family="Segoe UI, Arial, sans-serif" font-size="30">for Claude Desktop, VS Code, Cursor, Windsurf, and custom MCP clients.</text>
+  <rect x="122" y="470" width="178" height="46" rx="23" fill="#FFE2DA"/>
+  <rect x="314" y="470" width="132" height="46" rx="23" fill="#DAF2F0"/>
+  <rect x="460" y="470" width="150" height="46" rx="23" fill="#F5E6C4"/>
+  <text x="150" y="500" fill="#DB4F31" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="700">37 tools</text>
+  <text x="350" y="500" fill="#1B8F8A" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="700">JMAP</text>
+  <text x="495" y="500" fill="#8F6723" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="700">Node 18+</text>
+  <circle cx="764" cy="152" r="6" fill="#F8C1B6"/>
+  <circle cx="786" cy="152" r="6" fill="#F4D79A"/>
+  <circle cx="808" cy="152" r="6" fill="#98D7D3"/>
+  <text x="756" y="208" fill="#FDF5E8" font-family="Courier New, monospace" font-size="24">npm install</text>
+  <text x="756" y="242" fill="#FDF5E8" font-family="Courier New, monospace" font-size="24">@jordonh19/fastmail-mcp-server</text>
+  <text x="756" y="300" fill="#FDF5E8" font-family="Courier New, monospace" font-size="24">FASTMAIL_API_TOKEN=...</text>
+  <text x="756" y="334" fill="#FDF5E8" font-family="Courier New, monospace" font-size="24">npx @jordonh19/fastmail-mcp-server</text>
+  <text x="756" y="394" fill="#98D7D3" font-family="Courier New, monospace" font-size="24"># stdio by default</text>
+  <text x="756" y="428" fill="#98D7D3" font-family="Courier New, monospace" font-size="24"># HTTP when you need it</text>
+  <text x="122" y="577" fill="#56617A" font-family="Segoe UI, Arial, sans-serif" font-size="24">fastmail.jordonh.me</text>
+</svg>

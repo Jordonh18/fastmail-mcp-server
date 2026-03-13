@@ -55,6 +55,21 @@ a {
   text-decoration: none;
 }
 
+.skip-link {
+  position: absolute;
+  left: 1rem;
+  top: -3.5rem;
+  padding: 0.7rem 1rem;
+  border-radius: 999px;
+  background: var(--text);
+  color: #fff5ea;
+  z-index: 20;
+}
+
+.skip-link:focus-visible {
+  top: 1rem;
+}
+
 code,
 pre {
   font-family: "Courier New", monospace;
@@ -122,6 +137,10 @@ pre {
   padding: 2rem 0;
 }
 
+section[id] {
+  scroll-margin-top: 1rem;
+}
+
 .eyebrow {
   margin: 0 0 0.75rem;
   color: var(--accent-deep);
@@ -161,6 +180,18 @@ h3 {
   color: var(--muted);
 }
 
+.section-blurb {
+  max-width: 68ch;
+  margin: 0 0 1.5rem;
+  color: var(--muted);
+  line-height: 1.7;
+}
+
+.hero-blurb {
+  margin-top: 1rem;
+  margin-bottom: 0;
+}
+
 .hero-actions {
   display: flex;
   flex-wrap: wrap;
@@ -195,21 +226,26 @@ h3 {
   border: 1px solid var(--border);
 }
 
-.stat-strip {
+.trust-strip {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.9rem;
   padding: 0;
   margin: 2rem 0 0;
   list-style: none;
 }
 
-.stat-strip li,
+.trust-strip li,
 .terminal-card,
 .capability-card,
 .info-card,
 .tool-card,
-.footer {
+.footer,
+.client-card,
+.use-case-card,
+.resource-card,
+.faq-item,
+.setup-step {
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   background: var(--surface);
@@ -217,18 +253,18 @@ h3 {
   box-shadow: var(--shadow);
 }
 
-.stat-strip li {
+.trust-strip li {
   display: flex;
   flex-direction: column;
   gap: 0.45rem;
   padding: 1.1rem;
 }
 
-.stat-strip strong {
+.trust-strip strong {
   font-size: 1.2rem;
 }
 
-.stat-strip span {
+.trust-strip span {
   color: var(--muted);
   line-height: 1.5;
 }
@@ -288,7 +324,11 @@ h3 {
 
 .capability-grid,
 .tool-grid,
-.quickstart-grid {
+.quickstart-grid,
+.client-grid,
+.use-case-grid,
+.faq-grid,
+.resource-grid {
   display: grid;
   gap: 1rem;
 }
@@ -297,18 +337,50 @@ h3 {
   grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
+.client-grid {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.use-case-grid,
+.faq-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.resource-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
 .capability-card,
 .info-card,
-.tool-card {
+.tool-card,
+.client-card,
+.use-case-card,
+.resource-card,
+.faq-item,
+.setup-step {
   padding: 1.25rem;
 }
 
 .capability-card p,
 .info-card p,
-.tool-card p {
+.tool-card p,
+.client-card p,
+.use-case-card p,
+.resource-card p,
+.faq-item p,
+.setup-step p {
   margin: 0.75rem 0 0;
   color: var(--muted);
   line-height: 1.65;
+}
+
+.client-meta {
+  margin: 0;
+  color: var(--accent-deep);
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 .accent-mail {
@@ -333,6 +405,51 @@ h3 {
 
 .wide-card {
   grid-column: span 3;
+}
+
+.setup-list {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.setup-step {
+  position: relative;
+  padding-top: 1.8rem;
+}
+
+.wide-step {
+  grid-column: span 3;
+}
+
+.step-number {
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  background: var(--accent-soft);
+  color: var(--accent-deep);
+  font-weight: 700;
+}
+
+.setup-step h3 {
+  padding-left: 2.65rem;
+}
+
+.setup-step pre {
+  margin: 1rem 0 0;
+  padding: 1rem;
+  overflow-x: auto;
+  border-radius: var(--radius-md);
+  background: #f3e7d8;
 }
 
 .info-card pre {
@@ -384,6 +501,18 @@ h3 {
   font-weight: 700;
 }
 
+.text-link {
+  display: inline-flex;
+  margin-top: 1rem;
+  font-weight: 700;
+  color: var(--accent-deep);
+}
+
+.text-link:hover,
+.text-link:focus-visible {
+  text-decoration: underline;
+}
+
 @keyframes rise {
   from {
     opacity: 0;
@@ -400,7 +529,12 @@ h3 {
   .hero,
   .capability-grid,
   .tool-grid,
-  .quickstart-grid {
+  .quickstart-grid,
+  .client-grid,
+  .use-case-grid,
+  .faq-grid,
+  .resource-grid,
+  .setup-list {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
@@ -408,7 +542,11 @@ h3 {
     grid-column: span 2;
   }
 
-  .stat-strip {
+  .wide-step {
+    grid-column: span 2;
+  }
+
+  .trust-strip {
     grid-template-columns: 1fr;
   }
 }
@@ -428,11 +566,20 @@ h3 {
   .hero,
   .capability-grid,
   .tool-grid,
-  .quickstart-grid {
+  .quickstart-grid,
+  .client-grid,
+  .use-case-grid,
+  .faq-grid,
+  .resource-grid,
+  .setup-list {
     grid-template-columns: 1fr;
   }
 
   .wide-card {
+    grid-column: span 1;
+  }
+
+  .wide-step {
     grid-column: span 1;
   }
 
