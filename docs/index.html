@@ -3,10 +3,10 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Fastmail MCP Server | Fastmail Email, Calendar, and Contacts for MCP Clients</title>
+    <title>Fastmail MCP Server | Email, Calendar &amp; Contacts for MCP Clients</title>
     <meta
       name="description"
-      content="Open-source Fastmail MCP server for Claude Desktop, VS Code, Cursor, Windsurf, and custom MCP clients. Connect Fastmail email, calendars, contacts, labels, analytics, and diagnostics over JMAP with a TypeScript server."
+      content="Open-source MCP server for Fastmail. Connect email, calendars, and contacts to Claude Desktop, VS Code, Cursor, Windsurf, and custom MCP clients via JMAP."
     />
     <meta
       name="keywords"
@@ -17,7 +17,7 @@
       content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1"
     />
     <meta name="author" content="Jordon Harrison" />
-    <meta name="theme-color" content="#11213b" />
+    <meta name="theme-color" content="#09090b" />
     <meta name="application-name" content="Fastmail MCP Server" />
     <link rel="canonical" href="https://fastmail.jordonh.me/" />
     <link rel="sitemap" type="application/xml" title="Sitemap" href="https://fastmail.jordonh.me/sitemap.xml" />
@@ -25,27 +25,27 @@
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Fastmail MCP Server" />
     <meta property="og:url" content="https://fastmail.jordonh.me/" />
-    <meta property="og:title" content="Fastmail MCP Server for Claude, VS Code, Cursor, and MCP Clients" />
+    <meta property="og:title" content="Fastmail MCP Server for Claude, VS Code, Cursor &amp; MCP Clients" />
     <meta
       property="og:description"
-      content="Connect Fastmail email, calendars, contacts, labels, mailbox analytics, and diagnostics to MCP-compatible assistants over JMAP with an open-source TypeScript server."
+      content="Connect Fastmail email, calendars, and contacts to MCP-compatible AI assistants over JMAP. 45 tools. Open source. TypeScript."
     />
     <meta property="og:image" content="https://fastmail.jordonh.me/og-card.svg" />
     <meta
       property="og:image:alt"
-      content="Fastmail MCP Server with email, calendar, contacts, and mailbox automation for MCP clients"
+      content="Fastmail MCP Server — email, calendar, and contacts for MCP clients"
     />
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="Fastmail MCP Server for Claude, VS Code, Cursor, and MCP Clients" />
+    <meta name="twitter:title" content="Fastmail MCP Server for Claude, VS Code, Cursor &amp; MCP Clients" />
     <meta
       name="twitter:description"
-      content="Open-source Fastmail MCP server for email, calendar, contacts, labels, mailbox analytics, diagnostics, and AI-assisted workflows over JMAP."
+      content="Open-source Fastmail MCP server with 45 tools for email, calendars, contacts, and AI-assisted workflows over JMAP."
     />
     <meta name="twitter:image" content="https://fastmail.jordonh.me/og-card.svg" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Space+Grotesk:wght@400;500;700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap"
       rel="stylesheet"
     />
     <script type="application/ld+json">
@@ -57,7 +57,7 @@
             "@id": "https://fastmail.jordonh.me/#website",
             "url": "https://fastmail.jordonh.me/",
             "name": "Fastmail MCP Server",
-            "description": "Open-source Fastmail MCP server for email, calendars, contacts, labels, analytics, and mailbox workflows over JMAP.",
+            "description": "Open-source MCP server for Fastmail email, calendars, and contacts over JMAP.",
             "inLanguage": "en"
           },
           {
@@ -67,7 +67,7 @@
             "url": "https://fastmail.jordonh.me/",
             "codeRepository": "https://github.com/Jordonh18/fastmail-mcp-server",
             "downloadUrl": "https://www.npmjs.com/package/@jordonh19/fastmail-mcp-server",
-            "description": "A TypeScript Model Context Protocol server for Fastmail that exposes email, calendar, contacts, mailbox, diagnostics, analytics, and AI-assisted tools over JMAP.",
+            "description": "A TypeScript Model Context Protocol server for Fastmail that exposes 45 tools for email, calendar, contacts, mailbox management, diagnostics, and AI-assisted workflows over JMAP.",
             "programmingLanguage": ["TypeScript", "JavaScript"],
             "runtimePlatform": "Node.js",
             "license": "https://opensource.org/license/mit",
@@ -97,15 +97,15 @@
                 "name": "What is Fastmail MCP Server?",
                 "acceptedAnswer": {
                   "@type": "Answer",
-                  "text": "Fastmail MCP Server is an open-source Model Context Protocol server that connects MCP clients to Fastmail email, calendars, contacts, and mailbox workflows over JMAP."
+                  "text": "An open-source Model Context Protocol server that connects MCP clients to Fastmail email, calendars, and contacts over JMAP."
                 }
               },
               {
                 "@type": "Question",
-                "name": "Which MCP clients work with it?",
+                "name": "Which MCP clients does it work with?",
                 "acceptedAnswer": {
                   "@type": "Answer",
-                  "text": "It works with Claude Desktop, VS Code, Cursor, Windsurf, and other MCP-compatible clients that can launch stdio servers or connect over HTTP."
+                  "text": "Claude Desktop, VS Code, Cursor, Windsurf, and any MCP-compatible client over stdio or HTTP transport."
                 }
               },
               {
@@ -113,15 +113,15 @@
                 "name": "Do I need a Fastmail API token?",
                 "acceptedAnswer": {
                   "@type": "Answer",
-                  "text": "Yes. You need a Fastmail API token with Mail, Calendars, and Contacts access so the MCP server can authenticate to the JMAP API."
+                  "text": "Yes. Generate a token with Mail, Calendars, and Contacts access at Fastmail Settings, Privacy and Security, Manage API tokens."
                 }
               },
               {
                 "@type": "Question",
-                "name": "Does Fastmail MCP Server support both stdio and HTTP?",
+                "name": "Does it support both stdio and HTTP?",
                 "acceptedAnswer": {
                   "@type": "Answer",
-                  "text": "Yes. The server uses stdio by default for desktop MCP clients and can also run in HTTP mode with the transport and port flags."
+                  "text": "Yes. stdio is the default for desktop MCP clients. Use --transport http --port 3000 for remote access."
                 }
               }
             ]
@@ -132,413 +132,367 @@
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
-    <a class="skip-link" href="#main-content">Skip to content</a>
-    <div class="page-shell">
-      <header class="topbar">
-        <a class="brand" href="#hero">Fastmail MCP Server</a>
-        <nav class="topnav" aria-label="Primary">
-          <a href="#capabilities">Capabilities</a>
+    <a class="skip-link" href="#main">Skip to content</a>
+    <div class="shell">
+
+      <!-- Header -->
+      <header class="header">
+        <a class="brand" href="#">
+          <span class="brand-dot"></span>
+          Fastmail MCP Server
+        </a>
+        <nav class="nav" aria-label="Primary">
+          <a href="#features">Features</a>
+          <a href="#tools">Tools</a>
           <a href="#clients">Clients</a>
-          <a href="#quickstart">Quick Start</a>
-          <a href="#tooling">Tooling</a>
+          <a href="#install">Install</a>
           <a href="#faq">FAQ</a>
+          <a href="https://github.com/Jordonh18/fastmail-mcp-server" target="_blank" rel="noopener noreferrer">GitHub</a>
         </nav>
       </header>
 
-      <main id="main-content">
-        <section class="hero" id="hero">
-          <div class="hero-copy">
-            <p class="eyebrow">Fastmail · MCP · JMAP</p>
-            <h1>Fastmail email, calendar, and contacts for MCP clients.</h1>
-            <p class="lede">
-              Fastmail MCP Server is an open-source Model Context Protocol
-              server for Claude Desktop, VS Code, Cursor, Windsurf, and custom
-              MCP clients that need reliable Fastmail access over JMAP.
-            </p>
-            <p class="section-blurb hero-blurb">
-              Use one package to search inboxes, send mail, manage drafts,
-              browse contacts, coordinate calendars, and automate mailbox
-              workflows without building a custom Fastmail integration from
-              scratch. Version 1.1.0 adds label tools, mailbox and account
-              summaries, attachment listing, and setup diagnostics.
-            </p>
+      <main id="main">
 
+        <!-- Hero -->
+        <section class="hero" id="hero">
+          <div class="hero-glow"></div>
+          <div class="hero-content">
+            <p class="hero-label">v1.1.0 &middot; Open Source &middot; TypeScript</p>
+            <h1>Fastmail for <span>MCP clients</span>.</h1>
+            <p class="hero-description">
+              An open-source server that gives AI assistants full access to
+              Fastmail email, calendars, and contacts over JMAP.
+            </p>
             <div class="hero-actions">
-              <a class="button button-primary" href="#quickstart">Start With npx</a>
+              <a class="btn btn-primary" href="#install">Get Started</a>
               <a
-                class="button button-secondary"
+                class="btn btn-ghost"
                 href="https://github.com/Jordonh18/fastmail-mcp-server"
                 target="_blank"
                 rel="noopener noreferrer"
-                >View Repository</a
-              >
+              >GitHub</a>
             </div>
-
-            <ul class="trust-strip" aria-label="Project highlights">
-              <li>
-                <strong>Open source</strong>
-                <span>TypeScript codebase with CI and release workflow automation</span>
-              </li>
-              <li>
-                <strong>Fastmail JMAP</strong>
-                <span>Email, calendars, contacts, attachments, and mailbox actions</span>
-              </li>
-              <li>
-                <strong>45 tools</strong>
-                <span>Focused groups for labels, analytics, diagnostics, and day-to-day Fastmail workflows</span>
-              </li>
-              <li>
-                <strong>v1.1.0</strong>
-                <span>Published as <code>@jordonh19/fastmail-mcp-server</code> for Node 18+</span>
-              </li>
-            </ul>
           </div>
+          <div class="terminal">
+            <div class="terminal-bar">
+              <span class="terminal-dot"></span>
+              <span class="terminal-dot"></span>
+              <span class="terminal-dot"></span>
+              <span class="terminal-title">terminal</span>
+            </div>
+            <pre><code><span class="comment"># Install globally</span>
+<span class="cmd">npm</span> install <span class="flag">-g</span> <span class="str">@jordonh19/fastmail-mcp-server</span>
 
-          <aside class="hero-panel" aria-label="Quick install">
-            <div class="terminal-card">
-              <div class="terminal-chrome">
-                <span></span>
-                <span></span>
-                <span></span>
+<span class="comment"># Or run directly with npx</span>
+<span class="cmd">FASTMAIL_API_TOKEN</span>=<span class="str">"fm1-..."</span> \
+  <span class="cmd">npx</span> <span class="str">@jordonh19/fastmail-mcp-server</span>
+
+<span class="comment"># HTTP transport mode</span>
+<span class="cmd">npx</span> <span class="str">@jordonh19/fastmail-mcp-server</span> \
+  <span class="flag">--transport</span> http <span class="flag">--port</span> 3000</code></pre>
+          </div>
+        </section>
+
+        <!-- Features -->
+        <section class="section" id="features">
+          <span class="section-label">Capabilities</span>
+          <h2 class="section-title">Everything your assistant needs<br />to work with Fastmail.</h2>
+          <p class="section-desc">
+            A structured tool surface for reading, writing, and managing email,
+            calendar events, contacts, and mailboxes. Built with JMAP for
+            reliability and MCP for interoperability.
+          </p>
+          <div class="feature-grid">
+            <article class="feature-card">
+              <h3>Email Operations</h3>
+              <p>Search, read, thread, reply, forward, draft, send, archive, move, label, flag, bulk-manage, and download attachments.</p>
+              <span class="feature-meta">25 tools</span>
+            </article>
+            <article class="feature-card">
+              <h3>Calendar Control</h3>
+              <p>List calendars, query events, create meetings, update participants and alerts, and delete events.</p>
+              <span class="feature-meta">6 tools</span>
+            </article>
+            <article class="feature-card">
+              <h3>Contacts</h3>
+              <p>Search contacts, create cards, update organizations and details, and browse across address books.</p>
+              <span class="feature-meta">6 tools</span>
+            </article>
+            <article class="feature-card">
+              <h3>Analytics &amp; Diagnostics</h3>
+              <p>Mailbox stats, account summaries, capability checks, and token scope troubleshooting.</p>
+              <span class="feature-meta">4 tools</span>
+            </article>
+          </div>
+        </section>
+
+        <!-- Tools -->
+        <section class="section" id="tools">
+          <span class="section-label">Tool Surface</span>
+          <h2 class="section-title">45 tools across 9 focused groups.</h2>
+          <p class="section-desc">
+            Tools are organized into logical groups instead of a flat list.
+            Each group has a clear scope so your AI assistant can discover and
+            use the right tool without confusion.
+          </p>
+          <div class="tool-table">
+            <div class="tool-row">
+              <span class="tool-count">8</span>
+              <div class="tool-info">
+                <h3>Email Read</h3>
+                <p>search_emails, get_email, get_thread, get_unread_emails, get_latest_emails, get_mailbox_emails, get_email_attachments, download_attachment</p>
               </div>
-              <pre><code>npm install @jordonh19/fastmail-mcp-server
-
-FASTMAIL_API_TOKEN="your-api-token" \
-npx @jordonh19/fastmail-mcp-server
-
-# HTTP mode
-FASTMAIL_API_TOKEN="your-api-token" \
-npx @jordonh19/fastmail-mcp-server --transport http --port 3000</code></pre>
             </div>
-            <p class="panel-note">
-              Works with Claude Desktop, VS Code, Cursor, Windsurf, and other
-              MCP-compatible clients that support stdio or HTTP transports.
+            <div class="tool-row">
+              <span class="tool-count">5</span>
+              <div class="tool-info">
+                <h3>Email Write</h3>
+                <p>send_email, reply_email, forward_email, create_draft, send_draft</p>
+              </div>
+            </div>
+            <div class="tool-row">
+              <span class="tool-count">12</span>
+              <div class="tool-info">
+                <h3>Email Manage</h3>
+                <p>move_email, add_labels, remove_labels, update_email_flags, delete_email, bulk_email_action, bulk_add_labels, bulk_remove_labels, archive_email, mark_mailbox_read, get_mailbox_stats, get_account_summary</p>
+              </div>
+            </div>
+            <div class="tool-row">
+              <span class="tool-count">4</span>
+              <div class="tool-info">
+                <h3>Mailbox</h3>
+                <p>list_mailboxes, create_mailbox, rename_mailbox, delete_mailbox</p>
+              </div>
+            </div>
+            <div class="tool-row">
+              <span class="tool-count">6</span>
+              <div class="tool-info">
+                <h3>Calendar</h3>
+                <p>list_calendars, get_calendar_events, get_calendar_event, create_calendar_event, update_calendar_event, delete_calendar_event</p>
+              </div>
+            </div>
+            <div class="tool-row">
+              <span class="tool-count">6</span>
+              <div class="tool-info">
+                <h3>Contacts</h3>
+                <p>list_address_books, search_contacts, get_contact, create_contact, update_contact, delete_contact</p>
+              </div>
+            </div>
+            <div class="tool-row">
+              <span class="tool-count">1</span>
+              <div class="tool-info">
+                <h3>Identity</h3>
+                <p>get_identities &mdash; discover sender identities before composing mail</p>
+              </div>
+            </div>
+            <div class="tool-row">
+              <span class="tool-count">2</span>
+              <div class="tool-info">
+                <h3>Sampling</h3>
+                <p>summarize_email, suggest_reply &mdash; AI-powered via MCP sampling</p>
+              </div>
+            </div>
+            <div class="tool-row">
+              <span class="tool-count">1</span>
+              <div class="tool-info">
+                <h3>Diagnostics</h3>
+                <p>check_function_availability &mdash; verify JMAP capabilities</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Clients -->
+        <section class="section section-full" id="clients">
+          <div class="shell">
+            <span class="section-label">Compatibility</span>
+            <h2 class="section-title">Works with the clients you already use.</h2>
+            <p class="section-desc">
+              Connects to any MCP-compatible client over stdio or HTTP. One
+              package, consistent behavior, no per-client configuration.
             </p>
-          </aside>
-        </section>
-
-        <section class="section" id="capabilities">
-          <div class="section-heading">
-            <p class="eyebrow">Capabilities</p>
-            <h2>Built for real inbox and calendar workflows.</h2>
           </div>
-          <p class="section-blurb">
-            This Fastmail MCP server gives AI assistants a controlled, practical
-            tool surface for reading and sending email, handling calendar events,
-            updating contacts, managing mailboxes, checking capability access,
-            reviewing mailbox and account summaries, and using sampling-enabled
-            reply helpers where the client supports them.
-          </p>
-
-          <div class="capability-grid">
-            <article class="capability-card accent-mail">
-              <h3>Email operations</h3>
-              <p>
-                Search, read, thread, reply, forward, draft, archive, move,
-                label, summarize, bulk-manage, inspect attachments, and review
-                mailbox or account-level email summaries.
-              </p>
-            </article>
-            <article class="capability-card accent-calendar">
-              <h3>Calendar control</h3>
-              <p>
-                List calendars, query events, create meetings, update attendees,
-                manage alerts, and delete events cleanly.
-              </p>
-            </article>
-            <article class="capability-card accent-contacts">
-              <h3>Contacts and address books</h3>
-              <p>
-                Search contacts, create new cards, patch organizations and phone
-                details, and work across address books.
-              </p>
-            </article>
-            <article class="capability-card accent-ai">
-              <h3>AI-assisted helpers</h3>
-              <p>
-                Sampling-enabled clients can summarize an email or draft a reply
-                aligned to a specific intent.
-              </p>
-            </article>
-          </div>
-        </section>
-
-        <section class="section" id="clients">
-          <div class="section-heading">
-            <p class="eyebrow">Supported Clients</p>
-            <h2>Works with the MCP clients people actually use.</h2>
-          </div>
-          <p class="section-blurb">
-            If you are searching for a Fastmail MCP server for Claude Desktop,
-            VS Code, Cursor, Windsurf, or a custom agent runtime, this package
-            is designed for that exact job. It defaults to stdio for local tool
-            execution and can switch to HTTP when you need a long-running MCP
-            endpoint.
-          </p>
-
-          <div class="client-grid">
-            <article class="client-card">
-              <p class="client-meta">Desktop Assistant</p>
-              <h3>Claude Desktop</h3>
-              <p>Use Fastmail tools directly from a local MCP server process with a simple config entry.</p>
-            </article>
-            <article class="client-card">
-              <p class="client-meta">Editor Agent</p>
-              <h3>VS Code</h3>
-              <p>Connect Fastmail email and calendar actions to MCP-aware workflows in your editor.</p>
-            </article>
-            <article class="client-card">
-              <p class="client-meta">Coding Assistant</p>
-              <h3>Cursor</h3>
-              <p>Bring mailbox search, contact lookup, and calendar actions into agent-driven development flows.</p>
-            </article>
-            <article class="client-card">
-              <p class="client-meta">IDE Copilot</p>
-              <h3>Windsurf</h3>
-              <p>Run the same Fastmail MCP package in Windsurf using the standard command-and-env configuration.</p>
-            </article>
-            <article class="client-card">
-              <p class="client-meta">Remote Option</p>
-              <h3>Custom HTTP Clients</h3>
-              <p>Switch to HTTP transport when you need a remotely accessible MCP endpoint instead of stdio.</p>
-            </article>
+          <div class="marquee-wrap">
+            <div class="marquee-track marquee-row-1">
+              <div class="marquee-content">
+                <div class="client-pill"><img src="logos/claude.svg" class="client-pill-logo" alt="Claude" /><div><div class="client-pill-name">Claude Desktop</div><div class="client-pill-desc">Anthropic AI assistant</div></div></div>
+                <div class="client-pill"><img src="logos/cursor.svg" class="client-pill-logo" alt="Cursor" /><div><div class="client-pill-name">Cursor</div><div class="client-pill-desc">AI-native code editor</div></div></div>
+                <div class="client-pill"><img src="logos/github-copilot.svg" class="client-pill-logo" alt="GitHub Copilot" /><div><div class="client-pill-name">GitHub Copilot</div><div class="client-pill-desc">AI pair programmer</div></div></div>
+                <div class="client-pill"><img src="logos/openai.svg" class="client-pill-logo" alt="ChatGPT" /><div><div class="client-pill-name">ChatGPT</div><div class="client-pill-desc">OpenAI conversational AI</div></div></div>
+                <div class="client-pill"><img src="logos/windsurf.svg" class="client-pill-logo" alt="Windsurf" /><div><div class="client-pill-name">Windsurf</div><div class="client-pill-desc">Agentic IDE</div></div></div>
+                <div class="client-pill"><img src="logos/gemini.svg" class="client-pill-logo" alt="Gemini" /><div><div class="client-pill-name">Gemini</div><div class="client-pill-desc">Google AI assistant</div></div></div>
+                <div class="client-pill"><img src="logos/sourcegraph.svg" class="client-pill-logo" alt="Sourcegraph" /><div><div class="client-pill-name">Amp</div><div class="client-pill-desc">Sourcegraph coding agent</div></div></div>
+                <div class="client-pill"><img src="logos/zed.svg" class="client-pill-logo" alt="Zed" /><div><div class="client-pill-name">Zed</div><div class="client-pill-desc">High-performance editor</div></div></div>
+              </div>
+              <div class="marquee-content" aria-hidden="true">
+                <div class="client-pill"><img src="logos/claude.svg" class="client-pill-logo" alt="" /><div><div class="client-pill-name">Claude Desktop</div><div class="client-pill-desc">Anthropic AI assistant</div></div></div>
+                <div class="client-pill"><img src="logos/cursor.svg" class="client-pill-logo" alt="" /><div><div class="client-pill-name">Cursor</div><div class="client-pill-desc">AI-native code editor</div></div></div>
+                <div class="client-pill"><img src="logos/github-copilot.svg" class="client-pill-logo" alt="" /><div><div class="client-pill-name">GitHub Copilot</div><div class="client-pill-desc">AI pair programmer</div></div></div>
+                <div class="client-pill"><img src="logos/openai.svg" class="client-pill-logo" alt="" /><div><div class="client-pill-name">ChatGPT</div><div class="client-pill-desc">OpenAI conversational AI</div></div></div>
+                <div class="client-pill"><img src="logos/windsurf.svg" class="client-pill-logo" alt="" /><div><div class="client-pill-name">Windsurf</div><div class="client-pill-desc">Agentic IDE</div></div></div>
+                <div class="client-pill"><img src="logos/gemini.svg" class="client-pill-logo" alt="" /><div><div class="client-pill-name">Gemini</div><div class="client-pill-desc">Google AI assistant</div></div></div>
+                <div class="client-pill"><img src="logos/sourcegraph.svg" class="client-pill-logo" alt="" /><div><div class="client-pill-name">Amp</div><div class="client-pill-desc">Sourcegraph coding agent</div></div></div>
+                <div class="client-pill"><img src="logos/zed.svg" class="client-pill-logo" alt="" /><div><div class="client-pill-name">Zed</div><div class="client-pill-desc">High-performance editor</div></div></div>
+              </div>
+            </div>
+            <div class="marquee-track marquee-row-2">
+              <div class="marquee-content">
+                <div class="client-pill"><img src="logos/vscode.svg" class="client-pill-logo" alt="VS Code" /><div><div class="client-pill-name">VS Code</div><div class="client-pill-desc">Editor MCP integration</div></div></div>
+                <div class="client-pill"><img src="logos/jetbrains.svg" class="client-pill-logo" alt="JetBrains" /><div><div class="client-pill-name">JetBrains</div><div class="client-pill-desc">IDE AI assistant</div></div></div>
+                <div class="client-pill"><img src="logos/replit.svg" class="client-pill-logo" alt="Replit" /><div><div class="client-pill-name">Replit</div><div class="client-pill-desc">Cloud dev platform</div></div></div>
+                <div class="client-pill"><img src="logos/mistral.svg" class="client-pill-logo" alt="Mistral" /><div><div class="client-pill-name">Mistral AI</div><div class="client-pill-desc">Open-weight models</div></div></div>
+                <div class="client-pill"><img src="logos/aws.svg" class="client-pill-logo" alt="Amazon Q" /><div><div class="client-pill-name">Amazon Q</div><div class="client-pill-desc">AWS developer assistant</div></div></div>
+                <div class="client-pill"><img src="logos/warp.svg" class="client-pill-logo" alt="Warp" /><div><div class="client-pill-name">Warp</div><div class="client-pill-desc">Intelligent terminal</div></div></div>
+                <div class="client-pill"><img src="logos/roocode.svg" class="client-pill-logo" alt="Roo Code" /><div><div class="client-pill-name">Roo Code</div><div class="client-pill-desc">AI coding assistant</div></div></div>
+                <div class="client-pill"><img src="logos/goose.svg" class="client-pill-logo" alt="Goose" /><div><div class="client-pill-name">Goose</div><div class="client-pill-desc">Block AI agent</div></div></div>
+              </div>
+              <div class="marquee-content" aria-hidden="true">
+                <div class="client-pill"><img src="logos/vscode.svg" class="client-pill-logo" alt="" /><div><div class="client-pill-name">VS Code</div><div class="client-pill-desc">Editor MCP integration</div></div></div>
+                <div class="client-pill"><img src="logos/jetbrains.svg" class="client-pill-logo" alt="" /><div><div class="client-pill-name">JetBrains</div><div class="client-pill-desc">IDE AI assistant</div></div></div>
+                <div class="client-pill"><img src="logos/replit.svg" class="client-pill-logo" alt="" /><div><div class="client-pill-name">Replit</div><div class="client-pill-desc">Cloud dev platform</div></div></div>
+                <div class="client-pill"><img src="logos/mistral.svg" class="client-pill-logo" alt="" /><div><div class="client-pill-name">Mistral AI</div><div class="client-pill-desc">Open-weight models</div></div></div>
+                <div class="client-pill"><img src="logos/aws.svg" class="client-pill-logo" alt="" /><div><div class="client-pill-name">Amazon Q</div><div class="client-pill-desc">AWS developer assistant</div></div></div>
+                <div class="client-pill"><img src="logos/warp.svg" class="client-pill-logo" alt="" /><div><div class="client-pill-name">Warp</div><div class="client-pill-desc">Intelligent terminal</div></div></div>
+                <div class="client-pill"><img src="logos/roocode.svg" class="client-pill-logo" alt="" /><div><div class="client-pill-name">Roo Code</div><div class="client-pill-desc">AI coding assistant</div></div></div>
+                <div class="client-pill"><img src="logos/goose.svg" class="client-pill-logo" alt="" /><div><div class="client-pill-name">Goose</div><div class="client-pill-desc">Block AI agent</div></div></div>
+              </div>
+            </div>
+            <div class="marquee-track marquee-row-3">
+              <div class="marquee-content">
+                <div class="client-pill"><img src="logos/neovim.svg" class="client-pill-logo" alt="Neovim" /><div><div class="client-pill-name">Neovim</div><div class="client-pill-desc">Terminal code editor</div></div></div>
+                <div class="client-pill"><img src="logos/lmstudio.svg" class="client-pill-logo" alt="LM Studio" /><div><div class="client-pill-name">LM Studio</div><div class="client-pill-desc">Local LLM client</div></div></div>
+                <div class="client-pill"><img src="logos/vercel.svg" class="client-pill-logo" alt="v0" /><div><div class="client-pill-name">v0</div><div class="client-pill-desc">Vercel AI builder</div></div></div>
+                <div class="client-pill"><img src="logos/emacs.svg" class="client-pill-logo" alt="Emacs" /><div><div class="client-pill-name">Emacs</div><div class="client-pill-desc">Extensible text editor</div></div></div>
+                <div class="client-pill"><img src="logos/openai.svg" class="client-pill-logo" alt="Codex" /><div><div class="client-pill-name">Codex</div><div class="client-pill-desc">OpenAI coding agent</div></div></div>
+                <div class="client-pill"><img src="logos/firebase.svg" class="client-pill-logo" alt="Firebase" /><div><div class="client-pill-name">Firebase Genkit</div><div class="client-pill-desc">AI framework</div></div></div>
+                <div class="client-pill"><img src="logos/github.svg" class="client-pill-logo" alt="Cline" /><div><div class="client-pill-name">Cline</div><div class="client-pill-desc">Autonomous coding agent</div></div></div>
+                <div class="client-pill"><div class="client-pill-icon-text">MCP</div><div><div class="client-pill-name">Continue</div><div class="client-pill-desc">Open-source AI assistant</div></div></div>
+              </div>
+              <div class="marquee-content" aria-hidden="true">
+                <div class="client-pill"><img src="logos/neovim.svg" class="client-pill-logo" alt="" /><div><div class="client-pill-name">Neovim</div><div class="client-pill-desc">Terminal code editor</div></div></div>
+                <div class="client-pill"><img src="logos/lmstudio.svg" class="client-pill-logo" alt="" /><div><div class="client-pill-name">LM Studio</div><div class="client-pill-desc">Local LLM client</div></div></div>
+                <div class="client-pill"><img src="logos/vercel.svg" class="client-pill-logo" alt="" /><div><div class="client-pill-name">v0</div><div class="client-pill-desc">Vercel AI builder</div></div></div>
+                <div class="client-pill"><img src="logos/emacs.svg" class="client-pill-logo" alt="" /><div><div class="client-pill-name">Emacs</div><div class="client-pill-desc">Extensible text editor</div></div></div>
+                <div class="client-pill"><img src="logos/openai.svg" class="client-pill-logo" alt="" /><div><div class="client-pill-name">Codex</div><div class="client-pill-desc">OpenAI coding agent</div></div></div>
+                <div class="client-pill"><img src="logos/firebase.svg" class="client-pill-logo" alt="" /><div><div class="client-pill-name">Firebase Genkit</div><div class="client-pill-desc">AI framework</div></div></div>
+                <div class="client-pill"><img src="logos/github.svg" class="client-pill-logo" alt="" /><div><div class="client-pill-name">Cline</div><div class="client-pill-desc">Autonomous coding agent</div></div></div>
+                <div class="client-pill"><div class="client-pill-icon-text">MCP</div><div><div class="client-pill-name">Continue</div><div class="client-pill-desc">Open-source AI assistant</div></div></div>
+              </div>
+            </div>
           </div>
         </section>
 
-        <section class="section" id="quickstart">
-          <div class="section-heading">
-            <p class="eyebrow">Quick Start</p>
-            <h2>Minimal setup, clean transport model.</h2>
-          </div>
-          <p class="section-blurb">
-            Fastmail MCP Server is intentionally simple to install: create a
-            Fastmail API token, run the npm package, and point your MCP client
-            at it. The same package works for personal inbox workflows, team
-            assistants, and custom JMAP-based automations.
+        <!-- Install -->
+        <section class="section" id="install">
+          <span class="section-label">Get Started</span>
+          <h2 class="section-title">Running in under a minute.</h2>
+          <p class="section-desc">
+            Generate a Fastmail API token, run the package, and point your MCP
+            client at it.
           </p>
-
-          <ol class="setup-list">
-            <li class="setup-step">
-              <span class="step-number">1</span>
-              <h3>Create a Fastmail API token</h3>
-              <p>
-                Generate a token with Mail, Calendars, and Contacts access from
-                your Fastmail account settings.
-              </p>
-            </li>
-            <li class="setup-step">
-              <span class="step-number">2</span>
-              <h3>Run the server from npm</h3>
-              <p>
-                Use stdio for local MCP clients, or switch to HTTP with
-                <code>--transport http</code> and <code>--port</code>.
-              </p>
-            </li>
-            <li class="setup-step wide-step">
-              <span class="step-number">3</span>
-              <h3>Add it to your MCP client config</h3>
-              <pre><code>{
+          <div class="steps">
+            <div class="step">
+              <div class="step-num"></div>
+              <div class="step-body">
+                <h3>Create a Fastmail API token</h3>
+                <p>Go to Fastmail Settings &rarr; Privacy &amp; Security &rarr; Manage API tokens. Grant access to Mail, Calendars, and Contacts.</p>
+              </div>
+            </div>
+            <div class="step">
+              <div class="step-num"></div>
+              <div class="step-body">
+                <h3>Run the server</h3>
+                <p>Use stdio for local clients or <code>--transport http</code> for remote access.</p>
+                <pre><code>FASTMAIL_API_TOKEN="fm1-..." npx @jordonh19/fastmail-mcp-server</code></pre>
+              </div>
+            </div>
+            <div class="step">
+              <div class="step-num"></div>
+              <div class="step-body">
+                <h3>Add to your MCP client config</h3>
+                <p>Point your client at the server with a standard MCP configuration entry.</p>
+                <pre><code>{
   "servers": {
     "fastmail": {
       "command": "npx",
       "args": ["@jordonh19/fastmail-mcp-server"],
       "env": {
-        "FASTMAIL_API_TOKEN": "your-api-token-here"
+        "FASTMAIL_API_TOKEN": "your-api-token"
       }
     }
   }
 }</code></pre>
-            </li>
-          </ol>
-        </section>
-
-        <section class="section" id="tooling">
-          <div class="section-heading">
-            <p class="eyebrow">Tool Surface</p>
-            <h2>Organized into focused groups instead of a giant API blob.</h2>
-          </div>
-          <p class="section-blurb">
-            Search engines and humans both need specificity, so the tool surface
-            is intentionally split into email read, email write, email manage,
-            mailbox, calendar, contacts, identity, sampling, and diagnostics
-            groups. That makes it easier to understand what the Fastmail MCP
-            server can do at a glance.
-          </p>
-
-          <div class="tool-grid">
-            <article class="tool-card">
-              <span class="tool-count">8</span>
-              <h3>Email read</h3>
-              <p>Search, open, inspect threads, fetch unread mail, browse mailboxes, and list attachments.</p>
-            </article>
-            <article class="tool-card">
-              <span class="tool-count">5</span>
-              <h3>Email write</h3>
-              <p>Compose new mail, reply, forward, save drafts, and send drafts.</p>
-            </article>
-            <article class="tool-card">
-              <span class="tool-count">12</span>
-              <h3>Email manage</h3>
-              <p>Move, label, delete, archive, flag, bulk update, inspect stats, and mark a mailbox read.</p>
-            </article>
-            <article class="tool-card">
-              <span class="tool-count">4</span>
-              <h3>Mailbox</h3>
-              <p>Create, rename, list, and remove folders with Fastmail role awareness.</p>
-            </article>
-            <article class="tool-card">
-              <span class="tool-count">6</span>
-              <h3>Calendar</h3>
-              <p>Query events and manage schedules, participants, reminders, and locations.</p>
-            </article>
-            <article class="tool-card">
-              <span class="tool-count">6</span>
-              <h3>Contacts</h3>
-              <p>Work with address books and contact cards across personal and work details.</p>
-            </article>
-            <article class="tool-card">
-              <span class="tool-count">1</span>
-              <h3>Identity</h3>
-              <p>Discover available sender identities before sending mail.</p>
-            </article>
-            <article class="tool-card">
-              <span class="tool-count">2</span>
-              <h3>Sampling</h3>
-              <p>Use MCP client sampling to summarize mail or suggest a context-aware reply.</p>
-            </article>
-            <article class="tool-card">
-              <span class="tool-count">1</span>
-              <h3>Diagnostics</h3>
-              <p>Check Fastmail capability availability and guide setup when token scopes or client features are missing.</p>
-            </article>
+              </div>
+            </div>
           </div>
         </section>
 
-        <section class="section" id="use-cases">
-          <div class="section-heading">
-            <p class="eyebrow">Use Cases</p>
-            <h2>Designed for more than a landing-page demo.</h2>
-          </div>
-          <p class="section-blurb">
-            Common searches for a tool like this usually map to the same few
-            jobs: connect Fastmail to Claude, automate email triage, expose
-            calendar actions to an MCP client, or give an internal agent safe
-            access to contacts and mailbox operations. This server is built for
-            those workflows.
-          </p>
-
-          <div class="use-case-grid">
-            <article class="use-case-card">
-              <h3>Fastmail for Claude Desktop</h3>
-              <p>Search inboxes, summarize mail, and draft replies from a local MCP connection instead of brittle browser automation.</p>
-            </article>
-            <article class="use-case-card">
-              <h3>Fastmail in VS Code</h3>
-              <p>Run Fastmail-aware agent workflows inside the editor when you want code and communication context in the same toolchain.</p>
-            </article>
-            <article class="use-case-card">
-              <h3>Calendar and contact automation</h3>
-              <p>Create meetings, query events, and look up contact details with a Fastmail JMAP integration that speaks MCP cleanly.</p>
-            </article>
-            <article class="use-case-card">
-              <h3>Custom internal assistants</h3>
-              <p>Use the HTTP transport when you need a persistent MCP endpoint for internal tools or multi-client agent setups.</p>
-            </article>
-          </div>
-        </section>
-
+        <!-- FAQ -->
         <section class="section" id="faq">
-          <div class="section-heading">
-            <p class="eyebrow">FAQ</p>
-            <h2>Answers to the queries people search for first.</h2>
-          </div>
+          <span class="section-label">FAQ</span>
+          <h2 class="section-title">Common questions.</h2>
           <div class="faq-grid">
             <article class="faq-item">
               <h3>What is Fastmail MCP Server?</h3>
               <p>
-                It is an open-source MCP server for Fastmail that exposes email,
-                calendar, contacts, mailbox, identity, diagnostics, analytics,
-                and sampling-oriented tools over the Fastmail JMAP API.
+                An open-source Model Context Protocol server that connects
+                MCP-compatible AI assistants to Fastmail email, calendars, and
+                contacts over JMAP. Built in TypeScript, published on npm.
               </p>
             </article>
             <article class="faq-item">
-              <h3>Which MCP clients work with it?</h3>
+              <h3>Which clients does it work with?</h3>
               <p>
-                Claude Desktop, VS Code, Cursor, Windsurf, and other
-                MCP-compatible clients can run it over stdio, and custom agents
-                can use the HTTP transport.
+                Claude Desktop, VS Code, Cursor, Windsurf, and any
+                MCP-compatible client. It defaults to stdio and also supports
+                HTTP transport for remote access.
               </p>
             </article>
             <article class="faq-item">
               <h3>Do I need a Fastmail API token?</h3>
               <p>
-                Yes. You need a Fastmail API token with Mail, Calendars, and
-                Contacts access so the server can authenticate against the JMAP
-                session endpoint.
+                Yes. Generate a token with Mail, Calendars, and Contacts access
+                from your Fastmail account settings under Privacy &amp; Security.
               </p>
             </article>
             <article class="faq-item">
-              <h3>Can it both read and send email?</h3>
+              <h3>Can it read and send email?</h3>
               <p>
-                Yes. It supports searching and reading mail, replying,
-                forwarding, creating drafts, sending drafts, moving mail,
-                adding and removing labels, updating flags, archiving,
-                deleting, downloading attachments, and inspecting mailbox or
-                account summaries.
+                Yes. The 25 email tools cover searching, reading, threading,
+                replying, forwarding, drafting, labeling, archiving, moving,
+                bulk actions, and downloading attachments.
               </p>
             </article>
             <article class="faq-item">
-              <h3>Does it support calendars and contacts too?</h3>
+              <h3>Does it support calendars and contacts?</h3>
               <p>
-                Yes. The server includes tools for listing calendars, querying
-                events, creating and updating events, and reading or modifying
-                contacts in address books.
+                Yes. 6 calendar tools and 6 contact tools handle event
+                management, address books, and contact CRUD operations.
               </p>
             </article>
             <article class="faq-item">
-              <h3>Is there an HTTP mode?</h3>
+              <h3>What changed in v1.1.0?</h3>
               <p>
-                Yes. stdio is the default for local MCP clients, but you can run
-                the server with <code>--transport http --port 3000</code> to
-                expose an HTTP endpoint.
+                Added label tools, bulk label operations, attachment listing,
+                mailbox stats, account summaries, and diagnostics. Expanded
+                from 32 to 45 tools.
               </p>
             </article>
           </div>
         </section>
 
-        <section class="section" id="resources">
-          <div class="section-heading">
-            <p class="eyebrow">Resources</p>
-            <h2>Source, package, and docs in one place.</h2>
-          </div>
-          <div class="resource-grid">
-            <article class="resource-card">
-              <h3>GitHub Repository</h3>
-              <p>Browse the TypeScript source, tests, release workflow, issues, and release notes.</p>
-              <a class="text-link" href="https://github.com/Jordonh18/fastmail-mcp-server" target="_blank" rel="noopener noreferrer">Open GitHub</a>
-            </article>
-            <article class="resource-card">
-              <h3>npm Package</h3>
-              <p>Install the published package directly in Claude Desktop, VS Code, Cursor, or any other MCP client setup.</p>
-              <a class="text-link" href="https://www.npmjs.com/package/@jordonh19/fastmail-mcp-server" target="_blank" rel="noopener noreferrer">View on npm</a>
-            </article>
-            <article class="resource-card">
-              <h3>Fastmail Platform</h3>
-              <p>Use the official Fastmail account and API token flow as the backing service for this MCP integration.</p>
-              <a class="text-link" href="https://www.fastmail.com" target="_blank" rel="noopener noreferrer">Visit Fastmail</a>
-            </article>
-          </div>
-        </section>
       </main>
 
+      <!-- Footer -->
       <footer class="footer">
-        <p>Fastmail MCP Server is an open-source TypeScript MCP server for Fastmail over JMAP.</p>
+        <p>Open source &middot; MIT License &middot; Built by Jordon Harrison</p>
         <div class="footer-links">
           <a href="https://github.com/Jordonh18/fastmail-mcp-server" target="_blank" rel="noopener noreferrer">GitHub</a>
           <a href="https://www.npmjs.com/package/@jordonh19/fastmail-mcp-server" target="_blank" rel="noopener noreferrer">npm</a>
           <a href="https://www.fastmail.com" target="_blank" rel="noopener noreferrer">Fastmail</a>
         </div>
       </footer>
+
     </div>
   </body>
 </html>

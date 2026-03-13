@@ -4,7 +4,7 @@
   "description": "MCP server for Fastmail — enables AI assistants to read, search, send, and manage emails, calendars, and contacts via the JMAP protocol",
   "type": "module",
   "bin": {
-    "fastmail-mcp": "dist/index.js"
+    "fastmail-mcp-server": "dist/index.js"
   },
   "files": [
     "dist"
