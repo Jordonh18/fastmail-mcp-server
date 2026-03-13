@@ -273,7 +273,7 @@ export function registerCalendarTools(
       calendarId: z
         .string()
         .describe("Calendar ID to create the event in (from list_calendars)"),
-      title: z.string().describe("Event title"),
+      title: z.string().min(1).max(1024).describe("Event title"),
       start: z
         .string()
         .describe(
@@ -293,9 +293,10 @@ export function registerCalendarTools(
         ),
       description: z
         .string()
+        .max(50_000)
         .optional()
         .describe("Event description or notes"),
-      location: z.string().optional().describe("Event location name"),
+      location: z.string().max(1024).optional().describe("Event location name"),
       isAllDay: z
         .boolean()
         .optional()

@@ -7,13 +7,29 @@ import { Mailbox } from "../jmap/types.js";
 let cachedTrashId: string | null = null;
 let cachedArchiveId: string | null = null;
 let cachedMailboxes: Mailbox[] | null = null;
+let cacheTimestamp = 0;
+const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+const MAX_BULK_EMAILS = 100;
+
+function isCacheExpired(): boolean {
+  return Date.now() - cacheTimestamp > CACHE_TTL_MS;
+}
+
+function invalidateCache(): void {
+  cachedTrashId = null;
+  cachedArchiveId = null;
+  cachedMailboxes = null;
+  cacheTimestamp = 0;
+}
 
 async function loadMailboxes(client: JmapClient): Promise<Mailbox[]> {
-  if (cachedMailboxes) return cachedMailboxes;
+  if (cachedMailboxes && !isCacheExpired()) return cachedMailboxes;
+  invalidateCache();
   const accountId = await client.getAccountId();
   const response = await client.request([mailboxGet(accountId)]);
   const [, data] = response.methodResponses[0];
   cachedMailboxes = (data.list as Mailbox[]) ?? [];
+  cacheTimestamp = Date.now();
   return cachedMailboxes;
 }
 
@@ -164,7 +180,8 @@ export function registerEmailManageTools(server: McpServer, client: JmapClient):
       emailIds: z
         .array(z.string())
         .min(1)
-        .describe("Array of email IDs to act on"),
+        .max(MAX_BULK_EMAILS)
+        .describe(`Array of email IDs to act on (maximum ${MAX_BULK_EMAILS})`),
       action: z
         .enum([
           "mark_read",

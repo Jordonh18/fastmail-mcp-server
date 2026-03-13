@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { JmapClient } from "../jmap/client.js";
-import { registerEmailWriteTools } from "./email-write.js";
+import { registerEmailWriteTools, parseAddresses } from "./email-write.js";
 import { JMAP_CAPABILITIES } from "../jmap/types.js";
 
 const MOCK_SESSION = {
@@ -41,11 +41,33 @@ describe("email-write tools", () => {
 
   describe("address parsing", () => {
     it("handles plain email addresses", () => {
-      // Test through the tool's behavior
-      const server = new McpServer({ name: "test", version: "1.0.0" });
-      const client = createMockClient();
-      registerEmailWriteTools(server, client);
-      expect(server).toBeDefined();
+      const result = parseAddresses(["test@example.com"]);
+      expect(result).toEqual([{ name: null, email: "test@example.com" }]);
+    });
+
+    it("handles name with email in angle brackets", () => {
+      const result = parseAddresses(["John Doe <john@example.com>"]);
+      expect(result).toEqual([{ name: "John Doe", email: "john@example.com" }]);
+    });
+
+    it("rejects invalid email addresses", () => {
+      expect(() => parseAddresses(["not-an-email"])).toThrow("Invalid email address format");
+    });
+
+    it("rejects empty email strings", () => {
+      expect(() => parseAddresses([""])).toThrow("Invalid email address format");
+    });
+
+    it("rejects email without domain", () => {
+      expect(() => parseAddresses(["user@"])).toThrow("Invalid email address format");
+    });
+
+    it("accepts multiple valid addresses", () => {
+      const result = parseAddresses(["a@b.com", "Jane <jane@test.org>"]);
+      expect(result).toHaveLength(2);
+      expect(result[0].email).toBe("a@b.com");
+      expect(result[1].email).toBe("jane@test.org");
+      expect(result[1].name).toBe("Jane");
     });
   });
 
