@@ -3,16 +3,19 @@ name: Release
 on:
   push:
     branches: [main]
+  workflow_dispatch:
 
 permissions:
   contents: write
-  issues: write
-  pull-requests: write
   id-token: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
 
 jobs:
   release:
-    name: Create Release
+    name: Publish Release
     runs-on: ubuntu-latest
 
     steps:
@@ -20,18 +23,77 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          persist-credentials: false
+
+      - name: Fetch tags
+        run: git fetch --tags --force
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 24
           cache: npm
+          registry-url: https://registry.npmjs.org
 
       - name: Install dependencies
         run: npm ci
 
-      - name: Create release
-        run: npx semantic-release
+      - name: Determine release state
+        id: release_state
+        shell: bash
+        run: |
+          PACKAGE_NAME=$(node -p "JSON.parse(require('fs').readFileSync('package.json', 'utf8')).name")
+          PACKAGE_VERSION=$(node -p "JSON.parse(require('fs').readFileSync('package.json', 'utf8')).version")
+          TAG="v${PACKAGE_VERSION}"
+
+          if npm view "${PACKAGE_NAME}@${PACKAGE_VERSION}" version >/dev/null 2>&1; then
+            NPM_PUBLISHED=true
+          else
+            NPM_PUBLISHED=false
+          fi
+
+          if git rev-parse "$TAG" >/dev/null 2>&1; then
+            SHOULD_RELEASE=false
+            REASON="Tag ${TAG} already exists"
+          else
+            SHOULD_RELEASE=true
+            REASON="New package version ${PACKAGE_VERSION} detected"
+          fi
+
+          echo "package_name=${PACKAGE_NAME}" >> "$GITHUB_OUTPUT"
+          echo "package_version=${PACKAGE_VERSION}" >> "$GITHUB_OUTPUT"
+          echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
+          echo "npm_published=${NPM_PUBLISHED}" >> "$GITHUB_OUTPUT"
+          echo "should_release=${SHOULD_RELEASE}" >> "$GITHUB_OUTPUT"
+          echo "reason=${REASON}" >> "$GITHUB_OUTPUT"
+
+      - name: Skip release
+        if: steps.release_state.outputs.should_release != 'true'
+        run: echo "${{ steps.release_state.outputs.reason }}"
+
+      - name: Type check
+        if: steps.release_state.outputs.should_release == 'true'
+        run: npm run typecheck
+
+      - name: Run tests
+        if: steps.release_state.outputs.should_release == 'true'
+        run: npm test
+
+      - name: Build
+        if: steps.release_state.outputs.should_release == 'true'
+        run: npm run build
+
+      - name: Publish to npm
+        if: steps.release_state.outputs.should_release == 'true' && steps.release_state.outputs.npm_published != 'true'
+        run: npm publish --access public --provenance
+
+      - name: Skip npm publish
+        if: steps.release_state.outputs.should_release == 'true' && steps.release_state.outputs.npm_published == 'true'
+        run: echo "Version ${{ steps.release_state.outputs.package_version }} is already published on npm; creating the GitHub release only."
+
+      - name: Create GitHub release
+        if: steps.release_state.outputs.should_release == 'true'
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ steps.release_state.outputs.tag }}
+          TARGET: ${{ github.sha }}
+        run: gh release create "$TAG" --target "$TARGET" --title "$TAG" --generate-notes

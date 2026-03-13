@@ -178,7 +178,7 @@ npm run prepare        # Pre-install build hook (tsc)
 |----------|------|---------|---------|
 | **CI** | `ci.yml` | Push/PR to `main` | Matrix build & test (Node 18, 20, 22); strict type check |
 | **Deep Testing** | `deep-testing.yml` | Push/PR to `main`, manual | Coverage (>70%), build integrity, dependency audit |
-| **Release** | `release.yml` | Push to `main` | Semantic release — auto-version, GitHub release, and npm publish via trusted publishing |
+| **Release** | `release.yml` | Push to `main`, manual | Publishes to npm and creates a GitHub release when `package.json` has a new version |
 
 ### CI Pipeline (`ci.yml`)
 
@@ -192,13 +192,13 @@ npm run prepare        # Pre-install build hook (tsc)
 - **build-integrity**: Clean build, verifies `dist/index.js` + `dist/server.js` exist, no test files in dist, entry point exports validated
 - **dependency-audit**: `npm audit` and `npm outdated` (informational, non-blocking)
 
-### Semantic Release (`release.yml` + `.releaserc.json`)
+### Release Workflow (`release.yml`)
 
 - **Branches**: `main` only
-- **Plugins**: commit-analyzer → release-notes-generator → npm → github
-- **Commit format**: [Conventional Commits](https://www.conventionalcommits.org/) — `fix:` = patch, `feat:` = minor, `BREAKING CHANGE` = major
-- **Version source**: derived from commit history and tags; release versions are not committed back to `main`
-- **Publishing**: uses npm trusted publishing from GitHub Actions with `id-token: write` and package `publishConfig.provenance = true`
+- **Version source**: the version in `package.json`
+- **Behavior**: skips if the matching `v<version>` tag already exists
+- **Publishing**: runs `npm publish --access public --provenance`, then creates a GitHub release with generated notes
+- **Manual control**: contributors update the version themselves before merging or dispatching the workflow
 
 ## Key Dependencies
 
@@ -211,11 +211,6 @@ npm run prepare        # Pre-install build hook (tsc)
 
 - `typescript` ^5.5.0
 - `vitest` ^4.1.0 + `@vitest/coverage-v8` ^4.1.0
-- `semantic-release` ^24.0.0 with plugins:
-  - `@semantic-release/commit-analyzer` ^13.0.0
-  - `@semantic-release/release-notes-generator` ^14.0.0
-  - `@semantic-release/npm` ^12.0.0
-  - `@semantic-release/github` ^10.0.0
 
 ### Engine Requirement
 
@@ -242,7 +237,7 @@ Session endpoint: `https://api.fastmail.com/jmap/session`
 - All JMAP requests go through `JmapClient.request()` which handles auth, errors, and session management
 - Tool return values must use `{ content: [{ type: "text", text: "..." }] }` format
 - When adding new tools, register them in `src/server.ts`
-- Use **Conventional Commits** (`fix:`, `feat:`, `chore:`, etc.) — semantic-release uses these to determine version bumps
+- Update `package.json` when preparing a release; the workflow publishes only when it sees a new version tag is needed
 - Sampling tools (`summarize_email`, `suggest_reply`) require the connected MCP client to support the sampling capability
 - Query results are capped: emails 20–100, events/contacts 50–100
 - Image attachments are returned as base64 with MIME type; max download size is 10 MB
