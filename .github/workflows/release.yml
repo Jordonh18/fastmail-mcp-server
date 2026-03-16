@@ -87,7 +87,7 @@ jobs:
 
       - name: Publish to npm
         if: steps.release_state.outputs.should_release == 'true' && steps.release_state.outputs.npm_published != 'true'
-        run: npm publish
+        run: npm publish --public
 
       - name: Skip npm publish
         if: steps.release_state.outputs.should_release == 'true' && steps.release_state.outputs.npm_published == 'true'
