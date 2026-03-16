@@ -14,6 +14,7 @@ import {
   getEmailBody,
   formatEmailSummary,
 } from "./email-helpers.js";
+import { log } from "../logger.js";
 
 const MAX_ATTACHMENT_SIZE = 10 * 1024 * 1024; // 10 MB
 
@@ -47,6 +48,7 @@ export function registerEmailReadTools(server: McpServer, client: JmapClient): v
         .describe("Maximum number of results (default 20, max 100)"),
     },
     async ({ mailboxId, query, from, to, subject, after, before, hasAttachment, limit }) => {
+      log.tool("search_emails", "invoked", { mailboxId, query, from, to, subject, after, before, hasAttachment, limit });
       const accountId = await client.getAccountId();
 
       const filter: Record<string, unknown> = {};
@@ -85,6 +87,7 @@ export function registerEmailReadTools(server: McpServer, client: JmapClient): v
       const header = `Found ${total} email(s)${total > cappedLimit ? ` (showing first ${cappedLimit})` : ""}:\n`;
       const lines = emails.map((email, i) => formatEmailSummary(email, i));
 
+      log.tool("search_emails", "completed", { total, returned: emails.length });
       return {
         content: [{ type: "text", text: header + lines.join("\n\n") }],
       };
@@ -98,6 +101,7 @@ export function registerEmailReadTools(server: McpServer, client: JmapClient): v
       emailId: z.string().describe("The email ID to retrieve"),
     },
     async ({ emailId }) => {
+      log.tool("get_email", "invoked", { emailId });
       const accountId = await client.getAccountId();
       const response = await client.request([
         emailGet(accountId, [emailId]),
@@ -146,6 +150,7 @@ export function registerEmailReadTools(server: McpServer, client: JmapClient): v
         }
       }
 
+      log.tool("get_email", "completed", { emailId, subject: email.subject, attachments: email.attachments?.length ?? 0 });
       return {
         content: [{ type: "text", text: sections.join("\n") }],
       };
@@ -159,9 +164,8 @@ export function registerEmailReadTools(server: McpServer, client: JmapClient): v
       threadId: z.string().describe("The thread/conversation ID"),
     },
     async ({ threadId }) => {
+      log.tool("get_thread", "invoked", { threadId });
       const accountId = await client.getAccountId();
-
-      // First get the thread to find email IDs
       const threadResponse = await client.request([
         threadGet(accountId, [threadId]),
       ]);
@@ -202,6 +206,7 @@ export function registerEmailReadTools(server: McpServer, client: JmapClient): v
         return `--- Message ${i + 1} ---\nFrom: ${from}\nDate: ${date}\n\n${body}`;
       });
 
+      log.tool("get_thread", "completed", { threadId, messageCount: emails.length });
       return {
         content: [{ type: "text", text: header + "\n" + lines.join("\n\n") }],
       };
@@ -220,6 +225,7 @@ export function registerEmailReadTools(server: McpServer, client: JmapClient): v
         .describe("Maximum number of results (default 20, max 100)"),
     },
     async ({ mailboxId, limit }) => {
+      log.tool("get_unread_emails", "invoked", { mailboxId, limit });
       const accountId = await client.getAccountId();
 
       const unreadFilter: Record<string, unknown> = {
@@ -261,6 +267,7 @@ export function registerEmailReadTools(server: McpServer, client: JmapClient): v
       const header = `${total} unread email(s)${total > cappedLimit ? ` (showing first ${cappedLimit})` : ""}:\n`;
       const lines = emails.map((email, i) => formatEmailSummary(email, i));
 
+      log.tool("get_unread_emails", "completed", { total, returned: emails.length });
       return {
         content: [{ type: "text", text: header + lines.join("\n\n") }],
       };
@@ -279,6 +286,7 @@ export function registerEmailReadTools(server: McpServer, client: JmapClient): v
         .describe("Number of recent emails to return (default 10, max 50)"),
     },
     async ({ mailboxId, limit }) => {
+      log.tool("get_latest_emails", "invoked", { mailboxId, limit });
       const accountId = await client.getAccountId();
 
       const filter: Record<string, unknown> = {};
@@ -313,6 +321,7 @@ export function registerEmailReadTools(server: McpServer, client: JmapClient): v
       const header = `${emails.length} most recent email(s):\n`;
       const lines = emails.map((email, i) => formatEmailSummary(email, i));
 
+      log.tool("get_latest_emails", "completed", { returned: emails.length });
       return {
         content: [{ type: "text", text: header + lines.join("\n\n") }],
       };
@@ -336,6 +345,7 @@ export function registerEmailReadTools(server: McpServer, client: JmapClient): v
         .describe("Number of emails per page (default 20, max 100)"),
     },
     async ({ mailboxId, page, limit }) => {
+      log.tool("get_mailbox_emails", "invoked", { mailboxId, page, limit });
       const accountId = await client.getAccountId();
 
       const cappedLimit = Math.min(limit, 100);
@@ -373,6 +383,7 @@ export function registerEmailReadTools(server: McpServer, client: JmapClient): v
       const header = `Mailbox contents (page ${page + 1} of ${totalPages}, ${total} total email(s)):\n`;
       const lines = emails.map((email, i) => formatEmailSummary(email, position + i));
 
+      log.tool("get_mailbox_emails", "completed", { page, totalPages, total, returned: emails.length });
       return {
         content: [{ type: "text", text: header + lines.join("\n\n") }],
       };
@@ -386,6 +397,7 @@ export function registerEmailReadTools(server: McpServer, client: JmapClient): v
       emailId: z.string().describe("The email ID whose attachments should be listed"),
     },
     async ({ emailId }) => {
+      log.tool("get_email_attachments", "invoked", { emailId });
       const accountId = await client.getAccountId();
       const response = await client.request([
         emailGet(
@@ -444,6 +456,7 @@ export function registerEmailReadTools(server: McpServer, client: JmapClient): v
       name: z.string().optional().default("attachment").describe("Filename for the download"),
     },
     async ({ blobId, name }) => {
+      log.tool("download_attachment", "invoked", { blobId, name });
       const { content, contentType } = await client.downloadBlob(blobId, name);
 
       if (content.length > MAX_ATTACHMENT_SIZE) {

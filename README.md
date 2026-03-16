@@ -212,6 +212,26 @@ FASTMAIL_API_TOKEN="your-token" npx @jordonh19/fastmail-mcp-server --transport h
 
 The HTTP transport exposes a single `/mcp` endpoint that supports the MCP Streamable HTTP protocol.
 
+### Web UI Dashboard
+
+When running in HTTP mode, a built-in web dashboard is available at the server root. It provides:
+
+- **Live tool-call log** — see every MCP tool invocation in real time via SSE
+- **Connection tracking** — monitor active MCP client connections
+- **Server uptime** — at-a-glance health status
+
+On startup the server prints a one-time access token to the console. Open `http://localhost:<port>/` in a browser and enter the token to log in. The token is bound to an HttpOnly cookie so it never appears in URLs.
+
+## Claude Desktop Extension (DXT)
+
+A pre-packaged `.dxt` extension can be built for one-click installation in Claude Desktop:
+
+```bash
+npm run build:dxt
+```
+
+This produces `fastmail-mcp-server-v<version>.dxt` in the project root. Double-click the file (or drag it into Claude Desktop) to install. Claude will prompt for your Fastmail API token on first use.
+
 ## Configuration
 
 The server can be configured via environment variables or a JSON config file.
@@ -249,6 +269,17 @@ npm install
 npm run build
 npm test
 ```
+
+### Scripts
+
+| Command | Description |
+|---------|-------------|
+| `npm run build` | TypeScript compilation |
+| `npm run build:dxt` | Build + package as a Claude Desktop `.dxt` extension |
+| `npm run dev` | Watch mode build |
+| `npm test` | Run tests (Vitest) |
+| `npm run test:coverage` | Tests with v8 coverage |
+| `npm run typecheck` | Type check without emitting |
 
 Run locally:
 

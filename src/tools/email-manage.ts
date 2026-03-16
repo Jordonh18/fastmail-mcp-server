@@ -3,6 +3,7 @@ import { z } from "zod";
 import { JmapClient } from "../jmap/client.js";
 import { emailQuery, emailSet, mailboxGet } from "../jmap/methods.js";
 import { Mailbox, MethodCall } from "../jmap/types.js";
+import { log } from "../logger.js";
 
 let cachedTrashId: string | null = null;
 let cachedArchiveId: string | null = null;
@@ -123,6 +124,7 @@ export function registerEmailManageTools(server: McpServer, client: JmapClient):
       mailboxId: z.string().describe("The destination mailbox ID"),
     },
     async ({ emailId, mailboxId }) => {
+      log.tool("move_email", "invoked", { emailId, mailboxId });
       const accountId = await client.getAccountId();
 
       await client.request([
@@ -133,6 +135,7 @@ export function registerEmailManageTools(server: McpServer, client: JmapClient):
         }),
       ]);
 
+      log.tool("move_email", "completed", { emailId, mailboxId });
       return {
         content: [
           {
@@ -156,6 +159,7 @@ export function registerEmailManageTools(server: McpServer, client: JmapClient):
         .describe("Mailbox IDs to add as labels"),
     },
     async ({ emailId, mailboxIds }) => {
+      log.tool("add_labels", "invoked", { emailId, mailboxIds });
       const accountId = await client.getAccountId();
 
       await client.request([
@@ -166,6 +170,7 @@ export function registerEmailManageTools(server: McpServer, client: JmapClient):
         }),
       ]);
 
+      log.tool("add_labels", "completed", { emailId, count: mailboxIds.length });
       return {
         content: [
           {
@@ -189,6 +194,7 @@ export function registerEmailManageTools(server: McpServer, client: JmapClient):
         .describe("Mailbox IDs to remove as labels"),
     },
     async ({ emailId, mailboxIds }) => {
+      log.tool("remove_labels", "invoked", { emailId, mailboxIds });
       const accountId = await client.getAccountId();
 
       await client.request([
@@ -199,6 +205,7 @@ export function registerEmailManageTools(server: McpServer, client: JmapClient):
         }),
       ]);
 
+      log.tool("remove_labels", "completed", { emailId, count: mailboxIds.length });
       return {
         content: [
           {
@@ -225,6 +232,7 @@ export function registerEmailManageTools(server: McpServer, client: JmapClient):
         .describe("Set to true to flag/star, false to unflag/unstar"),
     },
     async ({ emailId, isRead, isFlagged }) => {
+      log.tool("update_email_flags", "invoked", { emailId, isRead, isFlagged });
       const accountId = await client.getAccountId();
 
       const patch: Record<string, unknown> = {};
@@ -251,6 +259,7 @@ export function registerEmailManageTools(server: McpServer, client: JmapClient):
       if (isRead !== undefined) changes.push(isRead ? "marked as read" : "marked as unread");
       if (isFlagged !== undefined) changes.push(isFlagged ? "flagged" : "unflagged");
 
+      log.tool("update_email_flags", "completed", { emailId, changes });
       return {
         content: [
           {
@@ -274,6 +283,7 @@ export function registerEmailManageTools(server: McpServer, client: JmapClient):
         .describe("Set to true to permanently delete (cannot be undone). Default: move to Trash."),
     },
     async ({ emailId, permanent }) => {
+      log.tool("delete_email", "invoked", { emailId, permanent });
       const accountId = await client.getAccountId();
 
       if (permanent) {
@@ -330,6 +340,7 @@ export function registerEmailManageTools(server: McpServer, client: JmapClient):
         .describe("Destination mailbox ID (required when action is 'move')"),
     },
     async ({ emailIds, action, mailboxId }) => {
+      log.tool("bulk_email_action", "invoked", { count: emailIds.length, action, mailboxId });
       const accountId = await client.getAccountId();
 
       if (action === "move" && !mailboxId) {
@@ -447,6 +458,7 @@ export function registerEmailManageTools(server: McpServer, client: JmapClient):
         .describe("Mailbox IDs to add as labels"),
     },
     async ({ emailIds, mailboxIds }) => {
+      log.tool("bulk_add_labels", "invoked", { emailCount: emailIds.length, mailboxCount: mailboxIds.length });
       const accountId = await client.getAccountId();
       const patch = buildMailboxPatch(mailboxIds, true);
       const update: Record<string, Record<string, unknown>> = {};
@@ -459,6 +471,7 @@ export function registerEmailManageTools(server: McpServer, client: JmapClient):
         emailSet(accountId, { update }),
       ]);
 
+      log.tool("bulk_add_labels", "completed", { emailCount: emailIds.length, labelsAdded: mailboxIds.length });
       return {
         content: [
           {
@@ -486,6 +499,7 @@ export function registerEmailManageTools(server: McpServer, client: JmapClient):
         .describe("Mailbox IDs to remove as labels"),
     },
     async ({ emailIds, mailboxIds }) => {
+      log.tool("bulk_remove_labels", "invoked", { emailCount: emailIds.length, mailboxCount: mailboxIds.length });
       const accountId = await client.getAccountId();
       const patch = buildMailboxPatch(mailboxIds, false);
       const update: Record<string, Record<string, unknown>> = {};
@@ -498,6 +512,7 @@ export function registerEmailManageTools(server: McpServer, client: JmapClient):
         emailSet(accountId, { update }),
       ]);
 
+      log.tool("bulk_remove_labels", "completed", { emailCount: emailIds.length, labelsRemoved: mailboxIds.length });
       return {
         content: [
           {
@@ -518,6 +533,7 @@ export function registerEmailManageTools(server: McpServer, client: JmapClient):
         .describe("A single email ID or array of email IDs to archive"),
     },
     async ({ emailIds: rawIds }) => {
+      log.tool("archive_email", "invoked", { emailIds: rawIds });
       const accountId = await client.getAccountId();
       const archiveId = await getArchiveMailboxId(client);
 
@@ -532,6 +548,7 @@ export function registerEmailManageTools(server: McpServer, client: JmapClient):
         emailSet(accountId, { update }),
       ]);
 
+      log.tool("archive_email", "completed", { count: emailIds.length });
       return {
         content: [
           {
@@ -552,6 +569,7 @@ export function registerEmailManageTools(server: McpServer, client: JmapClient):
       mailboxId: z.string().describe("The mailbox ID whose emails should be marked as read (use list_mailboxes to find IDs)"),
     },
     async ({ mailboxId }) => {
+      log.tool("mark_mailbox_read", "invoked", { mailboxId });
       const accountId = await client.getAccountId();
 
       // Query all unread emails in the mailbox
@@ -590,6 +608,7 @@ export function registerEmailManageTools(server: McpServer, client: JmapClient):
         emailSet(accountId, { update }),
       ]);
 
+      log.tool("mark_mailbox_read", "completed", { markedRead: emailIds.length });
       return {
         content: [
           {
@@ -611,6 +630,7 @@ export function registerEmailManageTools(server: McpServer, client: JmapClient):
         .describe("Mailbox ID to inspect. If omitted, returns stats for all mailboxes."),
     },
     async ({ mailboxId }) => {
+      log.tool("get_mailbox_stats", "invoked", { mailboxId: mailboxId ?? "all" });
       const mailboxes = await loadMailboxes(client);
 
       if (mailboxes.length === 0) {
@@ -652,6 +672,7 @@ export function registerEmailManageTools(server: McpServer, client: JmapClient):
     "Get a compact account-level summary with unique email totals, unread counts, mailbox counts, and top mailboxes. Prefer this over large list calls when you only need an overview.",
     {},
     async () => {
+      log.tool("get_account_summary", "invoked");
       const mailboxes = await loadMailboxes(client);
       const totalEmails = await queryEmailTotal(client, {}, "account.summary.total");
       const unreadEmails = await queryEmailTotal(
@@ -699,6 +720,7 @@ export function registerEmailManageTools(server: McpServer, client: JmapClient):
         "Note: mailbox totals can overlap because Fastmail mailboxes may also act like labels. The unique email counts above come from account-wide Email/query calls.",
       );
 
+      log.tool("get_account_summary", "completed", { mailboxCount: mailboxes.length, totalEmails, unreadEmails });
       return {
         content: [{ type: "text", text: sections.join("\n") }],
       };

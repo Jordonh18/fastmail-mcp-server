@@ -1,5 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { JmapClient } from "../jmap/client.js";
+import { log } from "../logger.js";
 import { JMAP_CAPABILITIES } from "../jmap/types.js";
 
 const MAILBOX_TOOLS = [
@@ -95,6 +96,7 @@ export function registerDiagnosticsTools(
     "Check which major Fastmail feature groups are available for this account and MCP client, including setup guidance for missing mail, submission, contacts, calendars, or sampling support.",
     {},
     async () => {
+      log.tool("check_function_availability", "invoked");
       const session = await client.getSession();
       const hasMail = await client.hasCapability(JMAP_CAPABILITIES.MAIL);
       const hasSubmission = await client.hasCapability(
@@ -174,6 +176,7 @@ export function registerDiagnosticsTools(
         );
       }
 
+      log.tool("check_function_availability", "completed", { totalTools, capabilities: sessionCapabilities.length });
       return {
         content: [{ type: "text", text: sections.join("\n") }],
       };

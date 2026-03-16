@@ -9,6 +9,7 @@ import {
   mailboxGet,
 } from "../jmap/methods.js";
 import { Email, EmailAddress, Identity, Mailbox } from "../jmap/types.js";
+import { log } from "../logger.js";
 
 let cachedIdentities: Identity[] | null = null;
 let cachedMailboxes: Map<string, Mailbox> | null = null;
@@ -106,6 +107,7 @@ export function registerEmailWriteTools(server: McpServer, client: JmapClient): 
         .describe("Sender identity ID from get_identities. Uses default if omitted."),
     },
     async ({ to, cc, bcc, subject, body, identityId }) => {
+      log.tool("send_email", "invoked", { to, cc, bcc, subject: subject.slice(0, 80), identityId });
       const accountId = await client.getAccountId();
       const identity = await resolveIdentity(client, identityId);
       const draftsMailbox = await getMailboxByRole(client, "drafts");
@@ -159,6 +161,7 @@ export function registerEmailWriteTools(server: McpServer, client: JmapClient): 
         }
       }
 
+      log.tool("send_email", "completed", { to });
       return {
         content: [
           {
@@ -187,6 +190,7 @@ export function registerEmailWriteTools(server: McpServer, client: JmapClient): 
         .describe("Sender identity ID. Auto-detected if omitted."),
     },
     async ({ emailId, body, replyAll, identityId }) => {
+      log.tool("reply_email", "invoked", { emailId, replyAll, identityId });
       const accountId = await client.getAccountId();
 
       // Fetch original email
@@ -287,6 +291,7 @@ export function registerEmailWriteTools(server: McpServer, client: JmapClient): 
       }
 
       const recipientList = replyTo.map(formatAddress).join(", ");
+      log.tool("reply_email", "completed", { emailId, recipients: recipientList });
       return {
         content: [
           {
@@ -314,6 +319,7 @@ export function registerEmailWriteTools(server: McpServer, client: JmapClient): 
         .describe("Sender identity ID. Uses default if omitted."),
     },
     async ({ emailId, to, body: message, identityId }) => {
+      log.tool("forward_email", "invoked", { emailId, to, identityId });
       const accountId = await client.getAccountId();
 
       // Fetch original email
@@ -415,6 +421,7 @@ export function registerEmailWriteTools(server: McpServer, client: JmapClient): 
         }
       }
 
+      log.tool("forward_email", "completed", { emailId, to });
       return {
         content: [
           {
@@ -441,6 +448,7 @@ export function registerEmailWriteTools(server: McpServer, client: JmapClient): 
         .describe("Sender identity ID from get_identities. Uses default if omitted."),
     },
     async ({ to, cc, bcc, subject, body, identityId }) => {
+      log.tool("create_draft", "invoked", { to, subject: subject.slice(0, 80), identityId });
       const accountId = await client.getAccountId();
       const identity = await resolveIdentity(client, identityId);
       const draftsMailbox = await getMailboxByRole(client, "drafts");
@@ -477,6 +485,7 @@ export function registerEmailWriteTools(server: McpServer, client: JmapClient): 
         );
       }
 
+      log.tool("create_draft", "completed", { draftId: created.draft.id });
       return {
         content: [
           {
@@ -499,9 +508,8 @@ export function registerEmailWriteTools(server: McpServer, client: JmapClient): 
         .describe("Sender identity ID. Auto-detected from draft if omitted."),
     },
     async ({ emailId, identityId }) => {
+      log.tool("send_draft", "invoked", { emailId, identityId });
       const accountId = await client.getAccountId();
-
-      // Fetch the draft to get sender info
       const draftResponse = await client.request([
         emailGet(accountId, [emailId]),
       ]);
@@ -564,6 +572,7 @@ export function registerEmailWriteTools(server: McpServer, client: JmapClient): 
         ...(draft.cc?.map(formatAddress) ?? []),
       ];
 
+      log.tool("send_draft", "completed", { emailId, recipients: recipients.join(", ") });
       return {
         content: [
           {

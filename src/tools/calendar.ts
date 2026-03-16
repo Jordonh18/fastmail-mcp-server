@@ -1,6 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { JmapClient } from "../jmap/client.js";
+import { log } from "../logger.js";
 import {
   calendarGet,
   calendarEventGet,
@@ -103,6 +104,7 @@ export function registerCalendarTools(
     "List all calendars in the Fastmail account with their names, colors, and visibility status",
     {},
     async () => {
+      log.tool("list_calendars", "invoked");
       const accountId = await client.getAccountId();
       const using = await getCalendarUsing(client);
 
@@ -131,6 +133,7 @@ export function registerCalendarTools(
         return `${cal.name}${color}${visible}${tz} [id: ${cal.id}]`;
       });
 
+      log.tool("list_calendars", "completed", { count: sorted.length });
       return {
         content: [{ type: "text", text: lines.join("\n") }],
       };
@@ -170,6 +173,7 @@ export function registerCalendarTools(
         .describe("Maximum number of events to return (default 50, max 100)"),
     },
     async ({ calendarId, after, before, title, limit }) => {
+      log.tool("get_calendar_events", "invoked", { calendarId, after, before, title, limit });
       const accountId = await client.getAccountId();
       const using = await getCalendarUsing(client);
 
@@ -225,6 +229,7 @@ export function registerCalendarTools(
       const total =
         (queryResponse?.[1].total as number) ?? events.length;
 
+      log.tool("get_calendar_events", "completed", { returned: events.length, total });
       const header = `Found ${total} event(s)${total > cappedLimit ? ` (showing first ${cappedLimit})` : ""}:\n`;
       const lines = events.map(
         (event, i) => `${i + 1}. ${formatEvent(event)}`,
@@ -245,6 +250,7 @@ export function registerCalendarTools(
       eventId: z.string().describe("The calendar event ID to retrieve"),
     },
     async ({ eventId }) => {
+      log.tool("get_calendar_event", "invoked", { eventId });
       const accountId = await client.getAccountId();
       const using = await getCalendarUsing(client);
 
@@ -260,6 +266,7 @@ export function registerCalendarTools(
         throw new Error(`Calendar event not found: ${eventId}`);
       }
 
+      log.tool("get_calendar_event", "completed", { eventId, title: events[0].title });
       return {
         content: [{ type: "text", text: formatEvent(events[0]) }],
       };
@@ -342,6 +349,7 @@ export function registerCalendarTools(
       status,
       freeBusyStatus,
     }) => {
+      log.tool("create_calendar_event", "invoked", { calendarId, title, start, isAllDay });
       const accountId = await client.getAccountId();
       const using = await getCalendarUsing(client);
 
@@ -415,6 +423,7 @@ export function registerCalendarTools(
         );
       }
 
+      log.tool("create_calendar_event", "completed", { eventId: created.newEvent.id, title });
       return {
         content: [
           {
@@ -471,6 +480,7 @@ export function registerCalendarTools(
       status,
       freeBusyStatus,
     }) => {
+      log.tool("update_calendar_event", "invoked", { eventId });
       const accountId = await client.getAccountId();
       const using = await getCalendarUsing(client);
 
@@ -517,6 +527,7 @@ export function registerCalendarTools(
         );
       }
 
+      log.tool("update_calendar_event", "completed", { eventId });
       return {
         content: [
           {
@@ -537,6 +548,7 @@ export function registerCalendarTools(
         .describe("The calendar event ID to delete"),
     },
     async ({ eventId }) => {
+      log.tool("delete_calendar_event", "invoked", { eventId });
       const accountId = await client.getAccountId();
       const using = await getCalendarUsing(client);
 
@@ -556,6 +568,7 @@ export function registerCalendarTools(
         );
       }
 
+      log.tool("delete_calendar_event", "completed", { eventId });
       return {
         content: [
           {

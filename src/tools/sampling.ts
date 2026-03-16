@@ -1,6 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { JmapClient } from "../jmap/client.js";
+import { log } from "../logger.js";
 import { emailGet } from "../jmap/methods.js";
 import { Email } from "../jmap/types.js";
 import { formatAddressList, getEmailBody } from "./email-helpers.js";
@@ -24,6 +25,7 @@ export function registerSamplingTools(server: McpServer, client: JmapClient): vo
       emailId: z.string().describe("The email ID to summarize (use search_emails or get_latest_emails to find IDs)"),
     },
     async ({ emailId }) => {
+      log.tool("summarize_email", "invoked", { emailId });
       const caps = server.server.getClientCapabilities();
       if (!caps?.sampling) {
         return {
@@ -65,6 +67,7 @@ export function registerSamplingTools(server: McpServer, client: JmapClient): vo
           ? result.content.text
           : "Unable to generate summary.";
 
+      log.tool("summarize_email", "completed", { emailId, subject });
       return {
         content: [
           {
@@ -89,6 +92,7 @@ export function registerSamplingTools(server: McpServer, client: JmapClient): vo
         ),
     },
     async ({ emailId, intent }) => {
+      log.tool("suggest_reply", "invoked", { emailId, intent });
       const caps = server.server.getClientCapabilities();
       if (!caps?.sampling) {
         return {
@@ -130,6 +134,7 @@ export function registerSamplingTools(server: McpServer, client: JmapClient): vo
           ? result.content.text
           : "Unable to generate reply draft.";
 
+      log.tool("suggest_reply", "completed", { emailId, subject });
       return {
         content: [
           {

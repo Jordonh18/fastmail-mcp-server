@@ -1,0 +1,12 @@
+{
+	"servers": {
+		"fastmail": {
+			"command": "npx",
+			"args": [
+				"@jordonh19/fastmail-mcp-server"
+			],
+			"type": "stdio"
+		}
+	},
+	"inputs": []
+}

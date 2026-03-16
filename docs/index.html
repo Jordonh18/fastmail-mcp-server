@@ -157,7 +157,7 @@
         <section class="hero" id="hero">
           <div class="hero-glow"></div>
           <div class="hero-content">
-            <p class="hero-label">v1.1.0 &middot; Open Source &middot; TypeScript</p>
+            <p class="hero-label">v1.2.0 &middot; Open Source &middot; TypeScript</p>
             <h1>Fastmail for <span>MCP clients</span>.</h1>
             <p class="hero-description">
               An open-source server that gives AI assistants full access to
@@ -171,6 +171,16 @@
                 target="_blank"
                 rel="noopener noreferrer"
               >GitHub</a>
+            </div>
+            <div class="hero-install-actions">
+              <a
+                class="btn btn-install btn-claude"
+                href="https://github.com/Jordonh18/fastmail-mcp-server/releases/latest/download/fastmail-mcp-server.dxt"
+              ><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Install in Claude Desktop</a>
+              <a
+                class="btn btn-install btn-vscode"
+                href="vscode:mcp/install?%7B%22name%22%3A%22fastmail%22%2C%22command%22%3A%22npx%22%2C%22args%22%3A%5B%22%40jordonh19%2Ffastmail-mcp-server%22%5D%7D"
+              ><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>Add to VS Code</a>
             </div>
           </div>
           <div class="terminal">
@@ -222,6 +232,16 @@
               <h3>Analytics &amp; Diagnostics</h3>
               <p>Mailbox stats, account summaries, capability checks, and token scope troubleshooting.</p>
               <span class="feature-meta">4 tools</span>
+            </article>
+            <article class="feature-card">
+              <h3>Web UI Dashboard</h3>
+              <p>Built-in live dashboard in HTTP mode with real-time tool-call log, connection tracking, and server health — secured by a one-time access token.</p>
+              <span class="feature-meta">HTTP mode</span>
+            </article>
+            <article class="feature-card">
+              <h3>Claude Desktop Extension</h3>
+              <p>One-command DXT packaging for drag-and-drop installation in Claude Desktop with guided API token setup.</p>
+              <span class="feature-meta">npm run build:dxt</span>
             </article>
           </div>
         </section>
@@ -471,11 +491,11 @@
               </p>
             </article>
             <article class="faq-item">
-              <h3>What changed in v1.1.0?</h3>
+              <h3>What changed in v1.2.0?</h3>
               <p>
-                Added label tools, bulk label operations, attachment listing,
-                mailbox stats, account summaries, and diagnostics. Expanded
-                from 32 to 45 tools.
+                Added a built-in web UI dashboard for HTTP mode with live
+                tool-call logging, and DXT packaging for one-click Claude
+                Desktop installation. Now at 45 tools across 9 groups.
               </p>
             </article>
           </div>

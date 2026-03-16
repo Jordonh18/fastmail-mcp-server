@@ -6,6 +6,7 @@ import {
   JMAP_CAPABILITIES,
   SESSION_URL,
 } from "./types.js";
+import { log } from "../logger.js";
 
 export class JmapClient {
   private apiToken: string;
@@ -37,21 +38,25 @@ export class JmapClient {
 
   async getSession(): Promise<JmapSession> {
     if (this.session) {
+      log.debug("Using cached JMAP session");
       return this.session;
     }
 
+    log.jmap("Session", "Fetching JMAP session from " + this.sessionUrl);
     const response = await fetch(this.sessionUrl, {
       method: "GET",
       headers: this.authHeaders,
     });
 
     if (response.status === 401) {
+      log.error("JMAP session auth failed (401) — token may be invalid");
       throw new Error(
         "Authentication failed. Check your FASTMAIL_API_TOKEN is valid.",
       );
     }
 
     if (!response.ok) {
+      log.error(`JMAP session fetch failed: ${response.status} ${response.statusText}`);
       throw new Error(
         `Failed to fetch JMAP session: ${response.status} ${response.statusText}`,
       );
@@ -62,12 +67,18 @@ export class JmapClient {
     const mailAccountId =
       this.session.primaryAccounts[JMAP_CAPABILITIES.MAIL];
     if (!mailAccountId) {
+      log.error("No mail account in JMAP session — token may lack JMAP mail access");
       throw new Error(
         "No mail account found. Ensure your API token has JMAP mail access.",
       );
     }
 
     this.accountId = mailAccountId;
+    log.jmap("Session", "Session established", {
+      accountId: mailAccountId,
+      apiUrl: this.session.apiUrl,
+      state: this.session.state,
+    });
     return this.session;
   }
 
@@ -132,6 +143,8 @@ export class JmapClient {
     using?: string[],
   ): Promise<JmapResponse> {
     const session = await this.getSession();
+    const methodNames = methodCalls.map(([name]) => name).join(", ");
+    log.jmap("Request", `Calling: ${methodNames}`);
 
     const body: JmapRequest = {
       using: using ?? [
@@ -142,7 +155,10 @@ export class JmapClient {
       methodCalls,
     };
 
+    log.debug(`JMAP request capabilities: ${body.using.join(", ")}`);
+
     let response: Response;
+    const startTime = Date.now();
     try {
       response = await fetch(session.apiUrl, {
         method: "POST",
@@ -150,12 +166,16 @@ export class JmapClient {
         body: JSON.stringify(body),
       });
     } catch (err) {
+      log.error(`JMAP network error after ${Date.now() - startTime}ms:`, err);
       throw new Error(
         this.sanitizeError(`Network error connecting to Fastmail: ${err instanceof Error ? err.message : String(err)}`),
       );
     }
 
+    const elapsed = Date.now() - startTime;
+
     if (response.status === 401) {
+      log.error(`JMAP request auth failed (401) after ${elapsed}ms — clearing session cache`);
       this.session = null;
       this.accountId = null;
       throw new Error(
@@ -164,15 +184,19 @@ export class JmapClient {
     }
 
     if (!response.ok) {
+      log.error(`JMAP request failed: ${response.status} ${response.statusText} (${elapsed}ms)`);
       throw new Error(
         `JMAP request failed: ${response.status} ${response.statusText}`,
       );
     }
 
     const result = (await response.json()) as JmapResponse;
+    const responseMethodNames = result.methodResponses.map(([name]) => name).join(", ");
+    log.jmap("Response", `${responseMethodNames} (${elapsed}ms)`);
 
     // Check for session state changes
     if (this.session && result.sessionState !== this.session.state) {
+      log.info(`JMAP session state changed (${this.session.state} → ${result.sessionState}) — will re-fetch session`);
       this.session = null; // Force re-fetch on next request
     }
 
@@ -181,6 +205,7 @@ export class JmapClient {
       if (methodName === "error") {
         const errorType = args.type as string;
         const description = args.description as string | undefined;
+        log.error(`JMAP method error: ${errorType} — ${description ?? "Unknown error"}`);
         throw new Error(
           `JMAP error (${errorType}): ${description ?? "Unknown error"}`,
         );
@@ -200,6 +225,7 @@ export class JmapClient {
   ): Promise<{ content: Buffer; contentType: string }> {
     const session = await this.getSession();
     const accountId = await this.getAccountId();
+    log.jmap("Download", `Downloading blob ${blobId} (${name})`);
 
     const url = session.downloadUrl
       .replace("{accountId}", encodeURIComponent(accountId))
@@ -208,6 +234,7 @@ export class JmapClient {
       .replace("{type}", "application/octet-stream");
 
     let response: Response;
+    const startTime = Date.now();
     try {
       response = await fetch(url, {
         method: "GET",
@@ -216,12 +243,14 @@ export class JmapClient {
         },
       });
     } catch (err) {
+      log.error(`Blob download network error after ${Date.now() - startTime}ms:`, err);
       throw new Error(
         this.sanitizeError(`Network error downloading attachment: ${err instanceof Error ? err.message : String(err)}`),
       );
     }
 
     if (response.status === 401) {
+      log.error("Blob download auth failed (401)");
       this.session = null;
       this.accountId = null;
       throw new Error(
@@ -230,6 +259,7 @@ export class JmapClient {
     }
 
     if (!response.ok) {
+      log.error(`Blob download failed: ${response.status} ${response.statusText}`);
       throw new Error(
         `Failed to download attachment: ${response.status} ${response.statusText}`,
       );
@@ -237,6 +267,7 @@ export class JmapClient {
 
     const contentType = response.headers.get("content-type") ?? "application/octet-stream";
     const arrayBuffer = await response.arrayBuffer();
+    log.jmap("Download", `Blob ${blobId} downloaded: ${arrayBuffer.byteLength} bytes, ${contentType} (${Date.now() - startTime}ms)`);
     return {
       content: Buffer.from(arrayBuffer),
       contentType,

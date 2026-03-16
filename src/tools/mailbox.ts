@@ -3,6 +3,7 @@ import { z } from "zod";
 import { JmapClient } from "../jmap/client.js";
 import { mailboxGet, mailboxSet } from "../jmap/methods.js";
 import { Mailbox } from "../jmap/types.js";
+import { log } from "../logger.js";
 
 export function registerMailboxTools(server: McpServer, client: JmapClient): void {
   server.tool(
@@ -10,6 +11,7 @@ export function registerMailboxTools(server: McpServer, client: JmapClient): voi
     "List all mailboxes (folders) in the Fastmail account with their roles, email counts, and IDs",
     {},
     async () => {
+      log.tool("list_mailboxes", "invoked");
       const accountId = await client.getAccountId();
       const response = await client.request([mailboxGet(accountId)]);
 
@@ -17,6 +19,7 @@ export function registerMailboxTools(server: McpServer, client: JmapClient): voi
       const mailboxes = (data.list as Mailbox[]) ?? [];
 
       if (mailboxes.length === 0) {
+        log.tool("list_mailboxes", "completed", { count: 0 });
         return { content: [{ type: "text", text: "No mailboxes found." }] };
       }
 
@@ -41,6 +44,7 @@ export function registerMailboxTools(server: McpServer, client: JmapClient): voi
         );
       }
 
+      log.tool("list_mailboxes", "completed", { count: mailboxes.length });
       return {
         content: [{ type: "text", text: lines.join("\n") }],
       };
@@ -58,6 +62,7 @@ export function registerMailboxTools(server: McpServer, client: JmapClient): voi
         .describe("Parent mailbox ID for creating a nested folder. Omit for top-level."),
     },
     async ({ name, parentId }) => {
+      log.tool("create_mailbox", "invoked", { name, parentId });
       const accountId = await client.getAccountId();
       const createData: { name: string; parentId?: string | null } = { name };
       if (parentId) {
@@ -79,6 +84,7 @@ export function registerMailboxTools(server: McpServer, client: JmapClient): voi
         );
       }
 
+      log.tool("create_mailbox", "completed", { id: created.new.id, name });
       return {
         content: [
           {
@@ -98,6 +104,7 @@ export function registerMailboxTools(server: McpServer, client: JmapClient): voi
       newName: z.string().min(1).max(256).describe("The new name for the mailbox"),
     },
     async ({ mailboxId, newName }) => {
+      log.tool("rename_mailbox", "invoked", { mailboxId, newName });
       const accountId = await client.getAccountId();
 
       const response = await client.request([
@@ -117,6 +124,7 @@ export function registerMailboxTools(server: McpServer, client: JmapClient): voi
         );
       }
 
+      log.tool("rename_mailbox", "completed", { mailboxId, newName });
       return {
         content: [
           {
@@ -142,6 +150,7 @@ export function registerMailboxTools(server: McpServer, client: JmapClient): voi
         ),
     },
     async ({ mailboxId, force }) => {
+      log.tool("delete_mailbox", "invoked", { mailboxId, force });
       const accountId = await client.getAccountId();
 
       const destroyOp: Record<string, unknown> = {};
@@ -164,6 +173,7 @@ export function registerMailboxTools(server: McpServer, client: JmapClient): voi
         );
       }
 
+      log.tool("delete_mailbox", "completed", { mailboxId });
       return {
         content: [
           {

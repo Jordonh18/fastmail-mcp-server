@@ -1,6 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { JmapClient } from "../jmap/client.js";
+import { log } from "../logger.js";
 import {
   addressBookGet,
   contactCardGet,
@@ -135,6 +136,7 @@ export function registerContactTools(
     "List all address books (contact groups) in the Fastmail account",
     {},
     async () => {
+      log.tool("list_address_books", "invoked");
       const accountId = await client.getAccountId();
       const using = await getContactsUsing(client);
 
@@ -163,6 +165,7 @@ export function registerContactTools(
         return `${book.name}${sub} [id: ${book.id}]`;
       });
 
+      log.tool("list_address_books", "completed", { count: sorted.length });
       return {
         content: [{ type: "text", text: lines.join("\n") }],
       };
@@ -194,6 +197,7 @@ export function registerContactTools(
         ),
     },
     async ({ query, email, addressBookId, limit }) => {
+      log.tool("search_contacts", "invoked", { query, email, addressBookId, limit });
       const accountId = await client.getAccountId();
       const using = await getContactsUsing(client);
 
@@ -245,6 +249,7 @@ export function registerContactTools(
       const total =
         (queryResponse?.[1].total as number) ?? contacts.length;
 
+      log.tool("search_contacts", "completed", { returned: contacts.length, total });
       const header = `Found ${total} contact(s)${total > cappedLimit ? ` (showing first ${cappedLimit})` : ""}:\n`;
       const lines = contacts.map(
         (contact, i) => `${i + 1}. ${formatContact(contact)}`,
@@ -267,6 +272,7 @@ export function registerContactTools(
         .describe("The contact ID to retrieve"),
     },
     async ({ contactId }) => {
+      log.tool("get_contact", "invoked", { contactId });
       const accountId = await client.getAccountId();
       const using = await getContactsUsing(client);
 
@@ -282,6 +288,7 @@ export function registerContactTools(
         throw new Error(`Contact not found: ${contactId}`);
       }
 
+      log.tool("get_contact", "completed", { contactId });
       return {
         content: [
           { type: "text", text: formatContact(contacts[0]) },
@@ -362,6 +369,7 @@ export function registerContactTools(
       jobTitle,
       notes,
     }) => {
+      log.tool("create_contact", "invoked", { addressBookId, firstName, lastName });
       const accountId = await client.getAccountId();
       const using = await getContactsUsing(client);
 
@@ -452,6 +460,7 @@ export function registerContactTools(
         .filter(Boolean)
         .join(" ") || "New contact";
 
+      log.tool("create_contact", "completed", { contactId: created.newContact.id, displayName });
       return {
         content: [
           {
@@ -470,6 +479,7 @@ export function registerContactTools(
       contactId: z.string().describe("The contact ID to delete"),
     },
     async ({ contactId }) => {
+      log.tool("delete_contact", "invoked", { contactId });
       const accountId = await client.getAccountId();
       const using = await getContactsUsing(client);
 
@@ -489,6 +499,7 @@ export function registerContactTools(
         );
       }
 
+      log.tool("delete_contact", "completed", { contactId });
       return {
         content: [
           {
@@ -566,6 +577,7 @@ export function registerContactTools(
       jobTitle,
       notes,
     }) => {
+      log.tool("update_contact", "invoked", { contactId });
       const accountId = await client.getAccountId();
       const using = await getContactsUsing(client);
 
@@ -644,6 +656,7 @@ export function registerContactTools(
         );
       }
 
+      log.tool("update_contact", "completed", { contactId });
       return {
         content: [
           {

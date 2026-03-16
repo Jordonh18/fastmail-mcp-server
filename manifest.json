@@ -1,0 +1,99 @@
+{
+  "manifest_version": "0.3",
+  "name": "fastmail-mcp-server",
+  "display_name": "Fastmail MCP Server",
+  "version": "1.2.0",
+  "description": "MCP server for Fastmail — enables AI assistants to read, search, send, and manage emails, calendars, and contacts via the JMAP protocol",
+  "author": {
+    "name": "jordonh19",
+    "url": "https://github.com/Jordonh18"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Jordonh18/fastmail-mcp-server.git"
+  },
+  "homepage": "https://github.com/Jordonh18/fastmail-mcp-server",
+  "support": "https://github.com/Jordonh18/fastmail-mcp-server/issues",
+  "keywords": [
+    "fastmail",
+    "jmap",
+    "email",
+    "calendar",
+    "contacts"
+  ],
+  "server": {
+    "type": "node",
+    "entry_point": "server/index.js",
+    "mcp_config": {
+      "command": "node",
+      "args": ["${__dirname}/server/index.js"],
+      "env": {
+        "FASTMAIL_API_TOKEN": "${user_config.api_token}"
+      }
+    }
+  },
+  "user_config": {
+    "api_token": {
+      "type": "string",
+      "title": "Fastmail API Token",
+      "description": "Your Fastmail API token. Generate one at: Fastmail Settings → Privacy & Security → Manage API tokens",
+      "required": true,
+      "sensitive": true
+    }
+  },
+  "compatibility": {
+    "platforms": ["darwin", "win32", "linux"],
+    "runtimes": {
+      "node": ">=18.0.0"
+    }
+  },
+  "tools": [
+    { "name": "list_mailboxes", "description": "List all mailboxes (folders) in the Fastmail account" },
+    { "name": "create_mailbox", "description": "Create a new mailbox (folder)" },
+    { "name": "rename_mailbox", "description": "Rename an existing mailbox" },
+    { "name": "delete_mailbox", "description": "Delete a mailbox" },
+    { "name": "get_identities", "description": "Get sender identities for the account" },
+    { "name": "search_emails", "description": "Search emails with filters" },
+    { "name": "get_email", "description": "Get a specific email by ID" },
+    { "name": "get_thread", "description": "Get an email thread/conversation" },
+    { "name": "get_unread_emails", "description": "Get unread emails" },
+    { "name": "get_latest_emails", "description": "Get the most recent emails" },
+    { "name": "get_mailbox_emails", "description": "Get emails from a specific mailbox" },
+    { "name": "get_email_attachments", "description": "List attachments on an email without returning the full body" },
+    { "name": "download_attachment", "description": "Download an email attachment" },
+    { "name": "send_email", "description": "Compose and send an email" },
+    { "name": "reply_email", "description": "Reply to an email" },
+    { "name": "forward_email", "description": "Forward an email" },
+    { "name": "create_draft", "description": "Create a draft email" },
+    { "name": "send_draft", "description": "Send a previously saved draft" },
+    { "name": "move_email", "description": "Move an email to a different mailbox" },
+    { "name": "add_labels", "description": "Add mailbox labels to an email" },
+    { "name": "remove_labels", "description": "Remove mailbox labels from an email" },
+    { "name": "update_email_flags", "description": "Update email flags (read, flagged, etc.)" },
+    { "name": "delete_email", "description": "Delete an email" },
+    { "name": "bulk_email_action", "description": "Perform bulk actions on multiple emails" },
+    { "name": "bulk_add_labels", "description": "Add mailbox labels to multiple emails at once" },
+    { "name": "bulk_remove_labels", "description": "Remove mailbox labels from multiple emails at once" },
+    { "name": "archive_email", "description": "Archive an email" },
+    { "name": "mark_mailbox_read", "description": "Mark all emails in a mailbox as read" },
+    { "name": "get_mailbox_stats", "description": "Get compact mailbox statistics (counts, unread, threads)" },
+    { "name": "get_account_summary", "description": "Get account-level summary with totals, unread counts, and top mailboxes" },
+    { "name": "list_calendars", "description": "List all calendars" },
+    { "name": "get_calendar_events", "description": "Get calendar events in a date range" },
+    { "name": "get_calendar_event", "description": "Get a specific calendar event" },
+    { "name": "create_calendar_event", "description": "Create a new calendar event" },
+    { "name": "update_calendar_event", "description": "Update an existing calendar event" },
+    { "name": "delete_calendar_event", "description": "Delete a calendar event" },
+    { "name": "list_address_books", "description": "List all address books" },
+    { "name": "search_contacts", "description": "Search contacts by name or email" },
+    { "name": "get_contact", "description": "Get a specific contact by ID" },
+    { "name": "create_contact", "description": "Create a new contact" },
+    { "name": "update_contact", "description": "Update an existing contact" },
+    { "name": "delete_contact", "description": "Delete a contact" },
+    { "name": "summarize_email", "description": "AI-powered email summarization via MCP sampling" },
+    { "name": "suggest_reply", "description": "AI-powered reply suggestion via MCP sampling" },
+    { "name": "check_function_availability", "description": "Check which Fastmail feature groups are available" }
+  ],
+  "tools_generated": false
+}

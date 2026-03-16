@@ -88,6 +88,22 @@ jobs:
         if: steps.release_state.outputs.should_release == 'true'
         run: npm run build
 
+      - name: Build DXT
+        if: steps.release_state.outputs.should_release == 'true'
+        id: build_dxt
+        run: |
+          node scripts/build-dxt.mjs
+          VERSION=$(node -p "JSON.parse(require('fs').readFileSync('package.json','utf8')).version")
+          DXT_FILE="fastmail-mcp-server-v${VERSION}.dxt"
+          if [ ! -f "$DXT_FILE" ]; then
+            echo "::error::Expected ${DXT_FILE} not found after running build-dxt.mjs"
+            exit 1
+          fi
+          # Create a stable-named copy for predictable download URLs
+          cp "$DXT_FILE" fastmail-mcp-server.dxt
+          echo "dxt_versioned=${DXT_FILE}" >> "$GITHUB_OUTPUT"
+          echo "Built DXT artifact: ${DXT_FILE}"
+
       - name: Verify OIDC environment
         if: steps.release_state.outputs.should_release == 'true' && steps.release_state.outputs.npm_published != 'true'
         run: |
@@ -112,4 +128,5 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAG: ${{ steps.release_state.outputs.tag }}
           TARGET: ${{ github.sha }}
-        run: gh release create "$TAG" --target "$TARGET" --title "$TAG" --generate-notes
+          DXT_VERSIONED: ${{ steps.build_dxt.outputs.dxt_versioned }}
+        run: gh release create "$TAG" --target "$TARGET" --title "$TAG" --generate-notes "$DXT_VERSIONED" fastmail-mcp-server.dxt

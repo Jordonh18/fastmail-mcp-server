@@ -2,6 +2,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { JmapClient } from "../jmap/client.js";
 import { identityGet } from "../jmap/methods.js";
 import { Identity } from "../jmap/types.js";
+import { log } from "../logger.js";
 
 export function registerIdentityTools(server: McpServer, client: JmapClient): void {
   server.tool(
@@ -9,6 +10,7 @@ export function registerIdentityTools(server: McpServer, client: JmapClient): vo
     "List all sender identities (email addresses) available for sending emails",
     {},
     async () => {
+      log.tool("get_identities", "invoked");
       const accountId = await client.getAccountId();
       const response = await client.request([identityGet(accountId)]);
 
@@ -16,6 +18,7 @@ export function registerIdentityTools(server: McpServer, client: JmapClient): vo
       const identities = (data.list as Identity[]) ?? [];
 
       if (identities.length === 0) {
+        log.tool("get_identities", "completed", { count: 0 });
         return { content: [{ type: "text", text: "No sender identities found." }] };
       }
 
@@ -28,6 +31,7 @@ export function registerIdentityTools(server: McpServer, client: JmapClient): vo
         return `${name}<${id.email}>${replyTo} [id: ${id.id}]`;
       });
 
+      log.tool("get_identities", "completed", { count: identities.length });
       return {
         content: [{ type: "text", text: lines.join("\n") }],
       };
