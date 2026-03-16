@@ -35,7 +35,10 @@ jobs:
           registry-url: https://registry.npmjs.org
 
       - name: Ensure npm supports trusted publishing
-        run: npm install -g npm@latest
+        run: |
+          npm install -g npm@latest
+          echo "npm version: $(npm --version)"
+          echo "node version: $(node --version)"
 
       - name: Install dependencies
         run: npm ci
@@ -85,9 +88,19 @@ jobs:
         if: steps.release_state.outputs.should_release == 'true'
         run: npm run build
 
+      - name: Verify OIDC environment
+        if: steps.release_state.outputs.should_release == 'true' && steps.release_state.outputs.npm_published != 'true'
+        run: |
+          echo "npm version: $(npm --version)"
+          if [ -z "$ACTIONS_ID_TOKEN_REQUEST_URL" ]; then
+            echo "::error::ACTIONS_ID_TOKEN_REQUEST_URL is not set — OIDC is not available"
+            exit 1
+          fi
+          echo "OIDC environment detected"
+
       - name: Publish to npm
         if: steps.release_state.outputs.should_release == 'true' && steps.release_state.outputs.npm_published != 'true'
-        run: npm publish --public
+        run: npm publish
 
       - name: Skip npm publish
         if: steps.release_state.outputs.should_release == 'true' && steps.release_state.outputs.npm_published == 'true'
