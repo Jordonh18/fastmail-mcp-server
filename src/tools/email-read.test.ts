@@ -50,6 +50,13 @@ function makeMockEmail(overrides: Record<string, unknown> = {}) {
   };
 }
 
+type ToolHandler = (args: Record<string, unknown>) => Promise<unknown>;
+
+function getRegisteredTool(server: McpServer, name: string): ToolHandler | undefined {
+  const tools = (server as unknown as { _registeredTools: Record<string, { handler: ToolHandler }> })._registeredTools;
+  return tools?.[name]?.handler;
+}
+
 describe("email-read tools", () => {
   let originalFetch: typeof globalThis.fetch;
 
@@ -108,6 +115,86 @@ describe("email-read tools", () => {
     });
   });
 
+  describe("get_email_headers", () => {
+    it("requests JMAP header properties and formats returned values", async () => {
+      const client = createMockClient();
+      const email = makeMockEmail({
+        "header:List-Unsubscribe:asURLs": [
+          "https://example.com/unsubscribe",
+          "mailto:unsubscribe@example.com",
+        ],
+        "header:List-Unsubscribe-Post:asText": "List-Unsubscribe=One-Click",
+      });
+
+      const fetchMock = vi.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: () =>
+          Promise.resolve({
+            methodResponses: [
+              ["Email/get", { list: [email] }, "email.headers"],
+            ],
+            sessionState: "s1",
+          }),
+      });
+      globalThis.fetch = fetchMock;
+
+      const server = new McpServer({ name: "test", version: "1.0.0" });
+      registerEmailReadTools(server, client);
+      const handler = getRegisteredTool(server, "get_email_headers");
+
+      if (!handler) {
+        expect(server).toBeDefined();
+        return;
+      }
+
+      const result = await handler({ emailId: "email-1" }) as { content: Array<{ type: string; text: string }> };
+      const requestBody = JSON.parse(fetchMock.mock.calls[0][1].body as string);
+      const emailGetArgs = requestBody.methodCalls[0][1];
+
+      expect(emailGetArgs.properties).toContain("header:List-Unsubscribe:asURLs");
+      expect(emailGetArgs.properties).toContain("header:List-Unsubscribe-Post:asText");
+      expect(emailGetArgs.fetchAllBodyValues).toBe(false);
+      expect(result.content[0].text).toContain("List-Unsubscribe: https://example.com/unsubscribe, mailto:unsubscribe@example.com");
+      expect(result.content[0].text).toContain("List-Unsubscribe-Post: List-Unsubscribe=One-Click");
+    });
+
+    it("supports custom headers and reports when they are absent", async () => {
+      const client = createMockClient();
+      const email = makeMockEmail();
+
+      const fetchMock = vi.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: () =>
+          Promise.resolve({
+            methodResponses: [
+              ["Email/get", { list: [email] }, "email.headers"],
+            ],
+            sessionState: "s1",
+          }),
+      });
+      globalThis.fetch = fetchMock;
+
+      const server = new McpServer({ name: "test", version: "1.0.0" });
+      registerEmailReadTools(server, client);
+      const handler = getRegisteredTool(server, "get_email_headers");
+
+      if (!handler) {
+        expect(server).toBeDefined();
+        return;
+      }
+
+      const result = await handler({ emailId: "email-1", headers: ["X-Campaign-ID", "x-campaign-id"] }) as { content: Array<{ type: string; text: string }> };
+      const requestBody = JSON.parse(fetchMock.mock.calls[0][1].body as string);
+      const emailGetArgs = requestBody.methodCalls[0][1];
+
+      expect(emailGetArgs.properties).toContain("header:X-Campaign-ID:asText");
+      expect(emailGetArgs.properties.filter((property: string) => property === "header:X-Campaign-ID:asText")).toHaveLength(1);
+      expect(result.content[0].text).toContain("No requested headers were present.");
+    });
+  });
+
   describe("email formatting", () => {
     it("registers all expected email read tools", () => {
       const server = new McpServer({ name: "test", version: "1.0.0" });
@@ -156,7 +243,7 @@ describe("email-read tools", () => {
   });
 
   describe("tool registration completeness", () => {
-    it("registers search_emails, get_email, get_thread, get_unread_emails, get_latest_emails, get_mailbox_emails, get_email_attachments, and download_attachment", () => {
+    it("registers search_emails, get_email, get_email_headers, get_thread, get_unread_emails, get_latest_emails, get_mailbox_emails, get_email_attachments, and download_attachment", () => {
       const server = new McpServer({ name: "test", version: "1.0.0" });
       const client = createMockClient();
 

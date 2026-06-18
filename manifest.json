@@ -56,6 +56,7 @@
     { "name": "get_identities", "description": "Get sender identities for the account" },
     { "name": "search_emails", "description": "Search emails with filters" },
     { "name": "get_email", "description": "Get a specific email by ID" },
+    { "name": "get_email_headers", "description": "Get selected email headers" },
     { "name": "get_thread", "description": "Get an email thread/conversation" },
     { "name": "get_unread_emails", "description": "Get unread emails" },
     { "name": "get_latest_emails", "description": "Get the most recent emails" },

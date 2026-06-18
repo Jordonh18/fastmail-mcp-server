@@ -133,6 +133,7 @@ FASTMAIL_API_TOKEN="your-api-token-here" npx @jordonh19/fastmail-mcp-server --tr
 
 - `search_emails`: Search emails by mailbox, text, sender, date range, attachments, and more.
 - `get_email`: Get full email content by ID.
+- `get_email_headers`: Get selected email headers without returning the full message body.
 - `get_thread`: Get all emails in a conversation thread.
 - `get_unread_emails`: Quickly retrieve unread emails, optionally filtered by mailbox.
 - `get_latest_emails`: Get the most recent emails from all or a specific mailbox.

@@ -13,6 +13,7 @@ const MAILBOX_TOOLS = [
 const EMAIL_READ_TOOLS = [
   "search_emails",
   "get_email",
+  "get_email_headers",
   "get_thread",
   "get_unread_emails",
   "get_latest_emails",

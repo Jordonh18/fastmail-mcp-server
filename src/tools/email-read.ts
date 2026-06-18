@@ -17,6 +17,13 @@ import {
 import { log } from "../logger.js";
 
 const MAX_ATTACHMENT_SIZE = 10 * 1024 * 1024; // 10 MB
+const DEFAULT_EMAIL_HEADERS = [
+  "List-Unsubscribe",
+  "List-Unsubscribe-Post",
+  "Reply-To",
+  "Return-Path",
+  "Authentication-Results",
+];
 
 function formatAttachmentSize(size: number): string {
   if (size >= 1024 * 1024) {
@@ -26,6 +33,36 @@ function formatAttachmentSize(size: number): string {
     return `${Math.round(size / 1024)} KB`;
   }
   return `${size} bytes`;
+}
+
+function uniqueHeaderNames(headers: string[]): string[] {
+  const seen = new Set<string>();
+  const names: string[] = [];
+
+  for (const header of headers) {
+    const name = header.trim();
+    const key = name.toLowerCase();
+    if (!name || seen.has(key)) continue;
+    seen.add(key);
+    names.push(name);
+  }
+
+  return names;
+}
+
+function headerProperty(headerName: string): string {
+  return headerName.toLowerCase() === "list-unsubscribe"
+    ? `header:${headerName}:asURLs`
+    : `header:${headerName}:asText`;
+}
+
+function formatHeaderValue(value: unknown): string | null {
+  if (value === null || value === undefined) return null;
+  if (Array.isArray(value)) {
+    if (value.length === 0) return null;
+    return value.map((item) => String(item)).join(", ");
+  }
+  return String(value);
 }
 
 export function registerEmailReadTools(server: McpServer, client: JmapClient): void {
@@ -153,6 +190,71 @@ export function registerEmailReadTools(server: McpServer, client: JmapClient): v
       log.tool("get_email", "completed", { emailId, subject: email.subject, attachments: email.attachments?.length ?? 0 });
       return {
         content: [{ type: "text", text: sections.join("\n") }],
+      };
+    },
+  );
+
+  server.tool(
+    "get_email_headers",
+    "Get selected raw email headers for a message without returning the full body. Defaults to unsubscribe, reply routing, return path, and authentication headers.",
+    {
+      emailId: z.string().describe("The email ID whose headers should be retrieved"),
+      headers: z
+        .array(z.string().min(1).max(200))
+        .optional()
+        .default(DEFAULT_EMAIL_HEADERS)
+        .describe("Header names to retrieve. Defaults to List-Unsubscribe, List-Unsubscribe-Post, Reply-To, Return-Path, and Authentication-Results."),
+    },
+    async ({ emailId, headers }) => {
+      const headerNames = uniqueHeaderNames(Array.isArray(headers) ? headers : DEFAULT_EMAIL_HEADERS);
+      log.tool("get_email_headers", "invoked", { emailId, headers: headerNames });
+
+      const accountId = await client.getAccountId();
+      const properties = [
+        "id",
+        "subject",
+        ...headerNames.map(headerProperty),
+      ];
+      const response = await client.request([
+        emailGet(
+          accountId,
+          [emailId],
+          {
+            properties,
+            fetchAllBodyValues: false,
+          },
+          "email.headers",
+        ),
+      ]);
+
+      const [, data] = response.methodResponses[0];
+      const emails = (data.list as Email[]) ?? [];
+
+      if (emails.length === 0) {
+        throw new Error(`Email not found: ${emailId}`);
+      }
+
+      const email = emails[0] as Email & Record<string, unknown>;
+      const lines = [
+        `Headers for "${email.subject || "(no subject)"}"`,
+        `Email ID: ${email.id}`,
+      ];
+      let returnedHeaders = 0;
+
+      for (const name of headerNames) {
+        const value = formatHeaderValue(email[headerProperty(name)]);
+        if (!value) continue;
+        lines.push(`${name}: ${value}`);
+        returnedHeaders += 1;
+      }
+
+      if (returnedHeaders === 0) {
+        lines.push("No requested headers were present.");
+      }
+
+      log.tool("get_email_headers", "completed", { emailId, returnedHeaders });
+      return {
+        content: [{ type: "text", text: lines.join("\n") }],
       };
     },
   );
