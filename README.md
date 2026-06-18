@@ -157,6 +157,7 @@ FASTMAIL_API_TOKEN="your-api-token-here" npx @jordonh19/fastmail-mcp-server --tr
 - `get_mailbox_stats`: Get compact mailbox-level unread, email, and thread counts.
 - `get_account_summary`: Get a compact account overview with unique email totals and top mailboxes.
 - `download_attachment`: Download an email attachment by blob ID.
+- `one_click_unsubscribe`: Send an RFC 8058 one-click unsubscribe request for an email.
 
 ### Mailbox
 

@@ -1,5 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
+import { isIP } from "node:net";
 import { JmapClient } from "../jmap/client.js";
 import {
   emailQuery,
@@ -24,6 +25,10 @@ const DEFAULT_EMAIL_HEADERS = [
   "Return-Path",
   "Authentication-Results",
 ];
+const LIST_UNSUBSCRIBE_HEADER = "List-Unsubscribe";
+const LIST_UNSUBSCRIBE_POST_HEADER = "List-Unsubscribe-Post";
+const ONE_CLICK_POST_VALUE = "List-Unsubscribe=One-Click";
+const ONE_CLICK_TIMEOUT_MS = 10_000;
 
 function formatAttachmentSize(size: number): string {
   if (size >= 1024 * 1024) {
@@ -63,6 +68,34 @@ function formatHeaderValue(value: unknown): string | null {
     return value.map((item) => String(item)).join(", ");
   }
   return String(value);
+}
+
+function formatHeaderUrls(value: unknown): string[] {
+  if (Array.isArray(value)) {
+    return value.filter((item): item is string => typeof item === "string");
+  }
+  if (typeof value === "string") return [value];
+  return [];
+}
+
+function findFirstHttpsUrl(urls: string[]): URL | null {
+  for (const value of urls) {
+    try {
+      const url = new URL(value);
+      if (isSafeUnsubscribeUrl(url)) return url;
+    } catch {
+      // Ignore malformed header URLs.
+    }
+  }
+  return null;
+}
+
+function isSafeUnsubscribeUrl(url: URL): boolean {
+  const hostname = url.hostname.replace(/^\[|\]$/g, "").toLowerCase();
+  return url.protocol === "https:" &&
+    hostname !== "localhost" &&
+    !hostname.endsWith(".localhost") &&
+    isIP(hostname) === 0;
 }
 
 export function registerEmailReadTools(server: McpServer, client: JmapClient): void {
@@ -255,6 +288,118 @@ export function registerEmailReadTools(server: McpServer, client: JmapClient): v
       log.tool("get_email_headers", "completed", { emailId, returnedHeaders });
       return {
         content: [{ type: "text", text: lines.join("\n") }],
+      };
+    },
+  );
+
+  server.tool(
+    "one_click_unsubscribe",
+    "Unsubscribe from a message using RFC 8058 one-click headers. Only posts to HTTPS List-Unsubscribe URLs when List-Unsubscribe-Post advertises one-click unsubscribe.",
+    {
+      emailId: z.string().describe("The email ID to unsubscribe from"),
+    },
+    async ({ emailId }) => {
+      log.tool("one_click_unsubscribe", "invoked", { emailId });
+
+      const accountId = await client.getAccountId();
+      const listUnsubscribeProperty = headerProperty(LIST_UNSUBSCRIBE_HEADER);
+      const listUnsubscribePostProperty = headerProperty(LIST_UNSUBSCRIBE_POST_HEADER);
+      const response = await client.request([
+        emailGet(
+          accountId,
+          [emailId],
+          {
+            properties: [
+              "id",
+              "subject",
+              listUnsubscribeProperty,
+              listUnsubscribePostProperty,
+            ],
+            fetchAllBodyValues: false,
+          },
+          "email.unsubscribe",
+        ),
+      ]);
+
+      const [, data] = response.methodResponses[0];
+      const emails = (data.list as Email[]) ?? [];
+
+      if (emails.length === 0) {
+        throw new Error(`Email not found: ${emailId}`);
+      }
+
+      const email = emails[0] as Email & Record<string, unknown>;
+      const subject = email.subject || "(no subject)";
+      const oneClickHeader = formatHeaderValue(email[listUnsubscribePostProperty])?.trim();
+
+      if (oneClickHeader !== ONE_CLICK_POST_VALUE) {
+        log.tool("one_click_unsubscribe", "skipped", { emailId, reason: "missing_one_click_header" });
+        return {
+          content: [
+            {
+              type: "text",
+              text: `Email "${subject}" does not advertise RFC 8058 one-click unsubscribe.`,
+            },
+          ],
+        };
+      }
+
+      const unsubscribeUrl = findFirstHttpsUrl(formatHeaderUrls(email[listUnsubscribeProperty]));
+      if (!unsubscribeUrl) {
+        log.tool("one_click_unsubscribe", "skipped", { emailId, reason: "no_https_url" });
+        return {
+          content: [
+            {
+              type: "text",
+              text: `Email "${subject}" does not include a safe HTTPS List-Unsubscribe URL.`,
+            },
+          ],
+        };
+      }
+
+      let unsubscribeResponse: Response;
+      try {
+        unsubscribeResponse = await fetch(unsubscribeUrl.href, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+          },
+          body: ONE_CLICK_POST_VALUE,
+          signal: AbortSignal.timeout(ONE_CLICK_TIMEOUT_MS),
+        });
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
+        log.tool("one_click_unsubscribe", "failed", { emailId, host: unsubscribeUrl.hostname, error: message });
+        return {
+          content: [
+            {
+              type: "text",
+              text: `One-click unsubscribe request to ${unsubscribeUrl.hostname} failed: ${message}`,
+            },
+          ],
+        };
+      }
+
+      if (!unsubscribeResponse.ok) {
+        log.tool("one_click_unsubscribe", "failed", { emailId, host: unsubscribeUrl.hostname, status: unsubscribeResponse.status });
+        return {
+          content: [
+            {
+              type: "text",
+              text: `One-click unsubscribe request to ${unsubscribeUrl.hostname} returned HTTP ${unsubscribeResponse.status}.`,
+            },
+          ],
+        };
+      }
+
+      log.tool("one_click_unsubscribe", "completed", { emailId, host: unsubscribeUrl.hostname, status: unsubscribeResponse.status });
+      return {
+        content: [
+          {
+            type: "text",
+            text: `One-click unsubscribe request sent for "${subject}" to ${unsubscribeUrl.hostname}.`,
+          },
+        ],
       };
     },
   );

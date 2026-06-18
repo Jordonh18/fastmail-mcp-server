@@ -20,6 +20,7 @@ const EMAIL_READ_TOOLS = [
   "get_mailbox_emails",
   "get_email_attachments",
   "download_attachment",
+  "one_click_unsubscribe",
 ];
 
 const EMAIL_WRITE_TOOLS = [

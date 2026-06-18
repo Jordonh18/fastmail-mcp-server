@@ -63,6 +63,7 @@
     { "name": "get_mailbox_emails", "description": "Get emails from a specific mailbox" },
     { "name": "get_email_attachments", "description": "List attachments on an email without returning the full body" },
     { "name": "download_attachment", "description": "Download an email attachment" },
+    { "name": "one_click_unsubscribe", "description": "Send an RFC 8058 one-click unsubscribe request" },
     { "name": "send_email", "description": "Compose and send an email" },
     { "name": "reply_email", "description": "Reply to an email" },
     { "name": "forward_email", "description": "Forward an email" },
