@@ -13,7 +13,7 @@ import { log } from "./logger.js";
 import { recordToolCall } from "./web-ui.js";
 
 export function createServer(): McpServer {
-  log.info("Initializing Fastmail MCP server v1.2.0");
+  log.info("Initializing Fastmail MCP server v1.3.0");
 
   const apiToken = process.env.FASTMAIL_API_TOKEN;
   if (!apiToken) {
@@ -28,7 +28,7 @@ export function createServer(): McpServer {
 
   const server = new McpServer({
     name: "fastmail",
-    version: "1.2.0",
+    version: "1.3.0",
   });
 
   // Wrap server.tool() to intercept handler invocations and feed the web-UI

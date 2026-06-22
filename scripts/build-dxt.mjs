@@ -10,7 +10,7 @@
  */
 
 import { execSync } from "node:child_process";
-import { readFileSync, mkdirSync, rmSync, cpSync, existsSync } from "node:fs";
+import { readFileSync, mkdirSync, rmSync, cpSync, existsSync, renameSync } from "node:fs";
 import { join, resolve } from "node:path";
 
 const ROOT = resolve(import.meta.dirname, "..");
@@ -71,10 +71,14 @@ try {
   // PowerShell Compress-Archive on Windows
   const isWin = process.platform === "win32";
   if (isWin) {
+    const zipOut = `${OUT}.zip`;
+    rmSync(zipOut, { force: true });
     execSync(
-      `powershell -NoProfile -Command "Compress-Archive -Path '${STAGE}\\*' -DestinationPath '${OUT}' -Force"`,
+      `powershell -NoProfile -Command "Compress-Archive -Path '${STAGE}\\*' -DestinationPath '${zipOut}' -Force"`,
       { stdio: "inherit" },
     );
+    rmSync(OUT, { force: true });
+    renameSync(zipOut, OUT);
   } else {
     // tar-based zip fallback for systems without zip
     execSync(`tar -cf - -C "${STAGE}" . | gzip -9 > "${OUT}"`, {
