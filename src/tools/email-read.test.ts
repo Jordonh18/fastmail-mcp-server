@@ -196,7 +196,7 @@ describe("email-read tools", () => {
   });
 
   describe("one_click_unsubscribe", () => {
-    it("posts RFC 8058 one-click unsubscribe requests to the first HTTPS URL", async () => {
+    it("posts one-click unsubscribe requests to the first safe HTTPS URL", async () => {
       const client = createMockClient();
       const email = makeMockEmail({
         "header:List-Unsubscribe:asURLs": [
@@ -250,6 +250,7 @@ describe("email-read tools", () => {
         "Content-Type": "application/x-www-form-urlencoded",
       });
       expect(unsubscribeOptions.body).toBe("List-Unsubscribe=One-Click");
+      expect(unsubscribeOptions.redirect).toBe("manual");
       expect(result.content[0].text).toContain("unsubscribe request sent");
       expect(result.content[0].text).toContain("unsubscribe.example.com");
     });
@@ -285,7 +286,7 @@ describe("email-read tools", () => {
       const result = await handler({ emailId: "email-1" }) as { content: Array<{ type: string; text: string }> };
 
       expect(fetchMock).toHaveBeenCalledTimes(1);
-      expect(result.content[0].text).toContain("does not advertise RFC 8058 one-click unsubscribe");
+      expect(result.content[0].text).toContain("does not advertise one-click unsubscribe");
     });
 
     it("does not post when no safe HTTPS unsubscribe URL is available", async () => {
@@ -365,6 +366,48 @@ describe("email-read tools", () => {
 
       expect(fetchMock).toHaveBeenCalledTimes(2);
       expect(result.content[0].text).toContain("returned HTTP 500");
+    });
+
+    it("reports redirect responses without following them", async () => {
+      const client = createMockClient();
+      const email = makeMockEmail({
+        "header:List-Unsubscribe:asURLs": ["https://unsubscribe.example.com/one-click"],
+        "header:List-Unsubscribe-Post:asText": "List-Unsubscribe=One-Click",
+      });
+
+      const fetchMock = vi.fn()
+        .mockResolvedValueOnce({
+          ok: true,
+          status: 200,
+          json: () =>
+            Promise.resolve({
+              methodResponses: [
+                ["Email/get", { list: [email] }, "email.unsubscribe"],
+              ],
+              sessionState: "s1",
+            }),
+        })
+        .mockResolvedValueOnce({
+          ok: false,
+          status: 302,
+        });
+      globalThis.fetch = fetchMock;
+
+      const server = new McpServer({ name: "test", version: "1.0.0" });
+      registerEmailReadTools(server, client);
+      const handler = getRegisteredTool(server, "one_click_unsubscribe");
+
+      if (!handler) {
+        expect(server).toBeDefined();
+        return;
+      }
+
+      const result = await handler({ emailId: "email-1" }) as { content: Array<{ type: string; text: string }> };
+      const unsubscribeOptions = fetchMock.mock.calls[1][1] as RequestInit;
+
+      expect(unsubscribeOptions.redirect).toBe("manual");
+      expect(fetchMock).toHaveBeenCalledTimes(2);
+      expect(result.content[0].text).toContain("returned HTTP 302");
     });
   });
 

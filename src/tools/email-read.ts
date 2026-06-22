@@ -1,6 +1,5 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { isIP } from "node:net";
 import { JmapClient } from "../jmap/client.js";
 import {
   emailQuery,
@@ -15,20 +14,20 @@ import {
   getEmailBody,
   formatEmailSummary,
 } from "./email-helpers.js";
+import {
+  DEFAULT_EMAIL_HEADERS,
+  LIST_UNSUBSCRIBE_HEADER,
+  LIST_UNSUBSCRIBE_POST_HEADER,
+  ONE_CLICK_POST_VALUE,
+  findFirstSafeUnsubscribeUrl,
+  formatHeaderValue,
+  headerProperty,
+  postOneClickUnsubscribe,
+  uniqueHeaderNames,
+} from "./email-unsubscribe.js";
 import { log } from "../logger.js";
 
 const MAX_ATTACHMENT_SIZE = 10 * 1024 * 1024; // 10 MB
-const DEFAULT_EMAIL_HEADERS = [
-  "List-Unsubscribe",
-  "List-Unsubscribe-Post",
-  "Reply-To",
-  "Return-Path",
-  "Authentication-Results",
-];
-const LIST_UNSUBSCRIBE_HEADER = "List-Unsubscribe";
-const LIST_UNSUBSCRIBE_POST_HEADER = "List-Unsubscribe-Post";
-const ONE_CLICK_POST_VALUE = "List-Unsubscribe=One-Click";
-const ONE_CLICK_TIMEOUT_MS = 10_000;
 
 function formatAttachmentSize(size: number): string {
   if (size >= 1024 * 1024) {
@@ -38,64 +37,6 @@ function formatAttachmentSize(size: number): string {
     return `${Math.round(size / 1024)} KB`;
   }
   return `${size} bytes`;
-}
-
-function uniqueHeaderNames(headers: string[]): string[] {
-  const seen = new Set<string>();
-  const names: string[] = [];
-
-  for (const header of headers) {
-    const name = header.trim();
-    const key = name.toLowerCase();
-    if (!name || seen.has(key)) continue;
-    seen.add(key);
-    names.push(name);
-  }
-
-  return names;
-}
-
-function headerProperty(headerName: string): string {
-  return headerName.toLowerCase() === "list-unsubscribe"
-    ? `header:${headerName}:asURLs`
-    : `header:${headerName}:asText`;
-}
-
-function formatHeaderValue(value: unknown): string | null {
-  if (value === null || value === undefined) return null;
-  if (Array.isArray(value)) {
-    if (value.length === 0) return null;
-    return value.map((item) => String(item)).join(", ");
-  }
-  return String(value);
-}
-
-function formatHeaderUrls(value: unknown): string[] {
-  if (Array.isArray(value)) {
-    return value.filter((item): item is string => typeof item === "string");
-  }
-  if (typeof value === "string") return [value];
-  return [];
-}
-
-function findFirstHttpsUrl(urls: string[]): URL | null {
-  for (const value of urls) {
-    try {
-      const url = new URL(value);
-      if (isSafeUnsubscribeUrl(url)) return url;
-    } catch {
-      // Ignore malformed header URLs.
-    }
-  }
-  return null;
-}
-
-function isSafeUnsubscribeUrl(url: URL): boolean {
-  const hostname = url.hostname.replace(/^\[|\]$/g, "").toLowerCase();
-  return url.protocol === "https:" &&
-    hostname !== "localhost" &&
-    !hostname.endsWith(".localhost") &&
-    isIP(hostname) === 0;
 }
 
 export function registerEmailReadTools(server: McpServer, client: JmapClient): void {
@@ -294,7 +235,7 @@ export function registerEmailReadTools(server: McpServer, client: JmapClient): v
 
   server.tool(
     "one_click_unsubscribe",
-    "Unsubscribe from a message using RFC 8058 one-click headers. Only posts to HTTPS List-Unsubscribe URLs when List-Unsubscribe-Post advertises one-click unsubscribe.",
+    "Unsubscribe from a message using one-click unsubscribe headers. Only posts to safe HTTPS List-Unsubscribe URLs when List-Unsubscribe-Post advertises one-click unsubscribe.",
     {
       emailId: z.string().describe("The email ID to unsubscribe from"),
     },
@@ -338,13 +279,13 @@ export function registerEmailReadTools(server: McpServer, client: JmapClient): v
           content: [
             {
               type: "text",
-              text: `Email "${subject}" does not advertise RFC 8058 one-click unsubscribe.`,
+              text: `Email "${subject}" does not advertise one-click unsubscribe.`,
             },
           ],
         };
       }
 
-      const unsubscribeUrl = findFirstHttpsUrl(formatHeaderUrls(email[listUnsubscribeProperty]));
+      const unsubscribeUrl = findFirstSafeUnsubscribeUrl(email[listUnsubscribeProperty]);
       if (!unsubscribeUrl) {
         log.tool("one_click_unsubscribe", "skipped", { emailId, reason: "no_https_url" });
         return {
@@ -359,14 +300,7 @@ export function registerEmailReadTools(server: McpServer, client: JmapClient): v
 
       let unsubscribeResponse: Response;
       try {
-        unsubscribeResponse = await fetch(unsubscribeUrl.href, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/x-www-form-urlencoded",
-          },
-          body: ONE_CLICK_POST_VALUE,
-          signal: AbortSignal.timeout(ONE_CLICK_TIMEOUT_MS),
-        });
+        unsubscribeResponse = await postOneClickUnsubscribe(unsubscribeUrl);
       } catch (err) {
         const message = err instanceof Error ? err.message : String(err);
         log.tool("one_click_unsubscribe", "failed", { emailId, host: unsubscribeUrl.hostname, error: message });
