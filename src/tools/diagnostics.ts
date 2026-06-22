@@ -13,12 +13,14 @@ const MAILBOX_TOOLS = [
 const EMAIL_READ_TOOLS = [
   "search_emails",
   "get_email",
+  "get_email_headers",
   "get_thread",
   "get_unread_emails",
   "get_latest_emails",
   "get_mailbox_emails",
   "get_email_attachments",
   "download_attachment",
+  "one_click_unsubscribe",
 ];
 
 const EMAIL_WRITE_TOOLS = [

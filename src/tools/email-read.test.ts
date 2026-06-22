@@ -50,6 +50,13 @@ function makeMockEmail(overrides: Record<string, unknown> = {}) {
   };
 }
 
+type ToolHandler = (args: Record<string, unknown>) => Promise<unknown>;
+
+function getRegisteredTool(server: McpServer, name: string): ToolHandler | undefined {
+  const tools = (server as unknown as { _registeredTools: Record<string, { handler: ToolHandler }> })._registeredTools;
+  return tools?.[name]?.handler;
+}
+
 describe("email-read tools", () => {
   let originalFetch: typeof globalThis.fetch;
 
@@ -108,6 +115,302 @@ describe("email-read tools", () => {
     });
   });
 
+  describe("get_email_headers", () => {
+    it("requests JMAP header properties and formats returned values", async () => {
+      const client = createMockClient();
+      const email = makeMockEmail({
+        "header:List-Unsubscribe:asURLs": [
+          "https://example.com/unsubscribe",
+          "mailto:unsubscribe@example.com",
+        ],
+        "header:List-Unsubscribe-Post:asText": "List-Unsubscribe=One-Click",
+      });
+
+      const fetchMock = vi.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: () =>
+          Promise.resolve({
+            methodResponses: [
+              ["Email/get", { list: [email] }, "email.headers"],
+            ],
+            sessionState: "s1",
+          }),
+      });
+      globalThis.fetch = fetchMock;
+
+      const server = new McpServer({ name: "test", version: "1.0.0" });
+      registerEmailReadTools(server, client);
+      const handler = getRegisteredTool(server, "get_email_headers");
+
+      if (!handler) {
+        expect(server).toBeDefined();
+        return;
+      }
+
+      const result = await handler({ emailId: "email-1" }) as { content: Array<{ type: string; text: string }> };
+      const requestBody = JSON.parse(fetchMock.mock.calls[0][1].body as string);
+      const emailGetArgs = requestBody.methodCalls[0][1];
+
+      expect(emailGetArgs.properties).toContain("header:List-Unsubscribe:asURLs");
+      expect(emailGetArgs.properties).toContain("header:List-Unsubscribe-Post:asText");
+      expect(emailGetArgs.fetchAllBodyValues).toBe(false);
+      expect(result.content[0].text).toContain("List-Unsubscribe: https://example.com/unsubscribe, mailto:unsubscribe@example.com");
+      expect(result.content[0].text).toContain("List-Unsubscribe-Post: List-Unsubscribe=One-Click");
+    });
+
+    it("supports custom headers and reports when they are absent", async () => {
+      const client = createMockClient();
+      const email = makeMockEmail();
+
+      const fetchMock = vi.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: () =>
+          Promise.resolve({
+            methodResponses: [
+              ["Email/get", { list: [email] }, "email.headers"],
+            ],
+            sessionState: "s1",
+          }),
+      });
+      globalThis.fetch = fetchMock;
+
+      const server = new McpServer({ name: "test", version: "1.0.0" });
+      registerEmailReadTools(server, client);
+      const handler = getRegisteredTool(server, "get_email_headers");
+
+      if (!handler) {
+        expect(server).toBeDefined();
+        return;
+      }
+
+      const result = await handler({ emailId: "email-1", headers: ["X-Campaign-ID", "x-campaign-id"] }) as { content: Array<{ type: string; text: string }> };
+      const requestBody = JSON.parse(fetchMock.mock.calls[0][1].body as string);
+      const emailGetArgs = requestBody.methodCalls[0][1];
+
+      expect(emailGetArgs.properties).toContain("header:X-Campaign-ID:asText");
+      expect(emailGetArgs.properties.filter((property: string) => property === "header:X-Campaign-ID:asText")).toHaveLength(1);
+      expect(result.content[0].text).toContain("No requested headers were present.");
+    });
+  });
+
+  describe("one_click_unsubscribe", () => {
+    it("posts one-click unsubscribe requests to the first safe HTTPS URL", async () => {
+      const client = createMockClient();
+      const email = makeMockEmail({
+        "header:List-Unsubscribe:asURLs": [
+          "mailto:unsubscribe@example.com",
+          "https://unsubscribe.example.com/one-click?token=abc",
+        ],
+        "header:List-Unsubscribe-Post:asText": "List-Unsubscribe=One-Click",
+      });
+
+      const fetchMock = vi.fn()
+        .mockResolvedValueOnce({
+          ok: true,
+          status: 200,
+          json: () =>
+            Promise.resolve({
+              methodResponses: [
+                ["Email/get", { list: [email] }, "email.unsubscribe"],
+              ],
+              sessionState: "s1",
+            }),
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          status: 204,
+        });
+      globalThis.fetch = fetchMock;
+
+      const server = new McpServer({ name: "test", version: "1.0.0" });
+      registerEmailReadTools(server, client);
+      const handler = getRegisteredTool(server, "one_click_unsubscribe");
+
+      if (!handler) {
+        expect(server).toBeDefined();
+        return;
+      }
+
+      const result = await handler({ emailId: "email-1" }) as { content: Array<{ type: string; text: string }> };
+      const jmapRequestBody = JSON.parse(fetchMock.mock.calls[0][1].body as string);
+      const jmapProperties = jmapRequestBody.methodCalls[0][1].properties;
+      const unsubscribeOptions = fetchMock.mock.calls[1][1] as RequestInit;
+
+      expect(jmapProperties).toEqual([
+        "id",
+        "subject",
+        "header:List-Unsubscribe:asURLs",
+        "header:List-Unsubscribe-Post:asText",
+      ]);
+      expect(fetchMock.mock.calls[1][0]).toBe("https://unsubscribe.example.com/one-click?token=abc");
+      expect(unsubscribeOptions.method).toBe("POST");
+      expect(unsubscribeOptions.headers).toEqual({
+        "Content-Type": "application/x-www-form-urlencoded",
+      });
+      expect(unsubscribeOptions.body).toBe("List-Unsubscribe=One-Click");
+      expect(unsubscribeOptions.redirect).toBe("manual");
+      expect(result.content[0].text).toContain("unsubscribe request sent");
+      expect(result.content[0].text).toContain("unsubscribe.example.com");
+    });
+
+    it("does not post when the one-click header is missing", async () => {
+      const client = createMockClient();
+      const email = makeMockEmail({
+        "header:List-Unsubscribe:asURLs": ["https://unsubscribe.example.com/one-click"],
+      });
+
+      const fetchMock = vi.fn().mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: () =>
+          Promise.resolve({
+            methodResponses: [
+              ["Email/get", { list: [email] }, "email.unsubscribe"],
+            ],
+            sessionState: "s1",
+          }),
+      });
+      globalThis.fetch = fetchMock;
+
+      const server = new McpServer({ name: "test", version: "1.0.0" });
+      registerEmailReadTools(server, client);
+      const handler = getRegisteredTool(server, "one_click_unsubscribe");
+
+      if (!handler) {
+        expect(server).toBeDefined();
+        return;
+      }
+
+      const result = await handler({ emailId: "email-1" }) as { content: Array<{ type: string; text: string }> };
+
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+      expect(result.content[0].text).toContain("does not advertise one-click unsubscribe");
+    });
+
+    it("does not post when no safe HTTPS unsubscribe URL is available", async () => {
+      const client = createMockClient();
+      const email = makeMockEmail({
+        "header:List-Unsubscribe:asURLs": [
+          "mailto:unsubscribe@example.com",
+          "http://unsubscribe.example.com/one-click",
+          "https://127.0.0.1/one-click",
+        ],
+        "header:List-Unsubscribe-Post:asText": "List-Unsubscribe=One-Click",
+      });
+
+      const fetchMock = vi.fn().mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: () =>
+          Promise.resolve({
+            methodResponses: [
+              ["Email/get", { list: [email] }, "email.unsubscribe"],
+            ],
+            sessionState: "s1",
+          }),
+      });
+      globalThis.fetch = fetchMock;
+
+      const server = new McpServer({ name: "test", version: "1.0.0" });
+      registerEmailReadTools(server, client);
+      const handler = getRegisteredTool(server, "one_click_unsubscribe");
+
+      if (!handler) {
+        expect(server).toBeDefined();
+        return;
+      }
+
+      const result = await handler({ emailId: "email-1" }) as { content: Array<{ type: string; text: string }> };
+
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+      expect(result.content[0].text).toContain("does not include a safe HTTPS List-Unsubscribe URL");
+    });
+
+    it("reports non-successful unsubscribe responses", async () => {
+      const client = createMockClient();
+      const email = makeMockEmail({
+        "header:List-Unsubscribe:asURLs": ["https://unsubscribe.example.com/one-click"],
+        "header:List-Unsubscribe-Post:asText": "List-Unsubscribe=One-Click",
+      });
+
+      const fetchMock = vi.fn()
+        .mockResolvedValueOnce({
+          ok: true,
+          status: 200,
+          json: () =>
+            Promise.resolve({
+              methodResponses: [
+                ["Email/get", { list: [email] }, "email.unsubscribe"],
+              ],
+              sessionState: "s1",
+            }),
+        })
+        .mockResolvedValueOnce({
+          ok: false,
+          status: 500,
+        });
+      globalThis.fetch = fetchMock;
+
+      const server = new McpServer({ name: "test", version: "1.0.0" });
+      registerEmailReadTools(server, client);
+      const handler = getRegisteredTool(server, "one_click_unsubscribe");
+
+      if (!handler) {
+        expect(server).toBeDefined();
+        return;
+      }
+
+      const result = await handler({ emailId: "email-1" }) as { content: Array<{ type: string; text: string }> };
+
+      expect(fetchMock).toHaveBeenCalledTimes(2);
+      expect(result.content[0].text).toContain("returned HTTP 500");
+    });
+
+    it("reports redirect responses without following them", async () => {
+      const client = createMockClient();
+      const email = makeMockEmail({
+        "header:List-Unsubscribe:asURLs": ["https://unsubscribe.example.com/one-click"],
+        "header:List-Unsubscribe-Post:asText": "List-Unsubscribe=One-Click",
+      });
+
+      const fetchMock = vi.fn()
+        .mockResolvedValueOnce({
+          ok: true,
+          status: 200,
+          json: () =>
+            Promise.resolve({
+              methodResponses: [
+                ["Email/get", { list: [email] }, "email.unsubscribe"],
+              ],
+              sessionState: "s1",
+            }),
+        })
+        .mockResolvedValueOnce({
+          ok: false,
+          status: 302,
+        });
+      globalThis.fetch = fetchMock;
+
+      const server = new McpServer({ name: "test", version: "1.0.0" });
+      registerEmailReadTools(server, client);
+      const handler = getRegisteredTool(server, "one_click_unsubscribe");
+
+      if (!handler) {
+        expect(server).toBeDefined();
+        return;
+      }
+
+      const result = await handler({ emailId: "email-1" }) as { content: Array<{ type: string; text: string }> };
+      const unsubscribeOptions = fetchMock.mock.calls[1][1] as RequestInit;
+
+      expect(unsubscribeOptions.redirect).toBe("manual");
+      expect(fetchMock).toHaveBeenCalledTimes(2);
+      expect(result.content[0].text).toContain("returned HTTP 302");
+    });
+  });
+
   describe("email formatting", () => {
     it("registers all expected email read tools", () => {
       const server = new McpServer({ name: "test", version: "1.0.0" });
@@ -156,7 +459,7 @@ describe("email-read tools", () => {
   });
 
   describe("tool registration completeness", () => {
-    it("registers search_emails, get_email, get_thread, get_unread_emails, get_latest_emails, get_mailbox_emails, get_email_attachments, and download_attachment", () => {
+    it("registers search_emails, get_email, get_email_headers, one_click_unsubscribe, get_thread, get_unread_emails, get_latest_emails, get_mailbox_emails, get_email_attachments, and download_attachment", () => {
       const server = new McpServer({ name: "test", version: "1.0.0" });
       const client = createMockClient();
 

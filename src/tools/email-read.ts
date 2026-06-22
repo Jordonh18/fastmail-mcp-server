@@ -14,6 +14,17 @@ import {
   getEmailBody,
   formatEmailSummary,
 } from "./email-helpers.js";
+import {
+  DEFAULT_EMAIL_HEADERS,
+  LIST_UNSUBSCRIBE_HEADER,
+  LIST_UNSUBSCRIBE_POST_HEADER,
+  ONE_CLICK_POST_VALUE,
+  findFirstSafeUnsubscribeUrl,
+  formatHeaderValue,
+  headerProperty,
+  postOneClickUnsubscribe,
+  uniqueHeaderNames,
+} from "./email-unsubscribe.js";
 import { log } from "../logger.js";
 
 const MAX_ATTACHMENT_SIZE = 10 * 1024 * 1024; // 10 MB
@@ -153,6 +164,176 @@ export function registerEmailReadTools(server: McpServer, client: JmapClient): v
       log.tool("get_email", "completed", { emailId, subject: email.subject, attachments: email.attachments?.length ?? 0 });
       return {
         content: [{ type: "text", text: sections.join("\n") }],
+      };
+    },
+  );
+
+  server.tool(
+    "get_email_headers",
+    "Get selected raw email headers for a message without returning the full body. Defaults to unsubscribe, reply routing, return path, and authentication headers.",
+    {
+      emailId: z.string().describe("The email ID whose headers should be retrieved"),
+      headers: z
+        .array(z.string().min(1).max(200))
+        .optional()
+        .default(DEFAULT_EMAIL_HEADERS)
+        .describe("Header names to retrieve. Defaults to List-Unsubscribe, List-Unsubscribe-Post, Reply-To, Return-Path, and Authentication-Results."),
+    },
+    async ({ emailId, headers }) => {
+      const headerNames = uniqueHeaderNames(Array.isArray(headers) ? headers : DEFAULT_EMAIL_HEADERS);
+      log.tool("get_email_headers", "invoked", { emailId, headers: headerNames });
+
+      const accountId = await client.getAccountId();
+      const properties = [
+        "id",
+        "subject",
+        ...headerNames.map(headerProperty),
+      ];
+      const response = await client.request([
+        emailGet(
+          accountId,
+          [emailId],
+          {
+            properties,
+            fetchAllBodyValues: false,
+          },
+          "email.headers",
+        ),
+      ]);
+
+      const [, data] = response.methodResponses[0];
+      const emails = (data.list as Email[]) ?? [];
+
+      if (emails.length === 0) {
+        throw new Error(`Email not found: ${emailId}`);
+      }
+
+      const email = emails[0] as Email & Record<string, unknown>;
+      const lines = [
+        `Headers for "${email.subject || "(no subject)"}"`,
+        `Email ID: ${email.id}`,
+      ];
+      let returnedHeaders = 0;
+
+      for (const name of headerNames) {
+        const value = formatHeaderValue(email[headerProperty(name)]);
+        if (!value) continue;
+        lines.push(`${name}: ${value}`);
+        returnedHeaders += 1;
+      }
+
+      if (returnedHeaders === 0) {
+        lines.push("No requested headers were present.");
+      }
+
+      log.tool("get_email_headers", "completed", { emailId, returnedHeaders });
+      return {
+        content: [{ type: "text", text: lines.join("\n") }],
+      };
+    },
+  );
+
+  server.tool(
+    "one_click_unsubscribe",
+    "Unsubscribe from a message using one-click unsubscribe headers. Only posts to safe HTTPS List-Unsubscribe URLs when List-Unsubscribe-Post advertises one-click unsubscribe.",
+    {
+      emailId: z.string().describe("The email ID to unsubscribe from"),
+    },
+    async ({ emailId }) => {
+      log.tool("one_click_unsubscribe", "invoked", { emailId });
+
+      const accountId = await client.getAccountId();
+      const listUnsubscribeProperty = headerProperty(LIST_UNSUBSCRIBE_HEADER);
+      const listUnsubscribePostProperty = headerProperty(LIST_UNSUBSCRIBE_POST_HEADER);
+      const response = await client.request([
+        emailGet(
+          accountId,
+          [emailId],
+          {
+            properties: [
+              "id",
+              "subject",
+              listUnsubscribeProperty,
+              listUnsubscribePostProperty,
+            ],
+            fetchAllBodyValues: false,
+          },
+          "email.unsubscribe",
+        ),
+      ]);
+
+      const [, data] = response.methodResponses[0];
+      const emails = (data.list as Email[]) ?? [];
+
+      if (emails.length === 0) {
+        throw new Error(`Email not found: ${emailId}`);
+      }
+
+      const email = emails[0] as Email & Record<string, unknown>;
+      const subject = email.subject || "(no subject)";
+      const oneClickHeader = formatHeaderValue(email[listUnsubscribePostProperty])?.trim();
+
+      if (oneClickHeader !== ONE_CLICK_POST_VALUE) {
+        log.tool("one_click_unsubscribe", "skipped", { emailId, reason: "missing_one_click_header" });
+        return {
+          content: [
+            {
+              type: "text",
+              text: `Email "${subject}" does not advertise one-click unsubscribe.`,
+            },
+          ],
+        };
+      }
+
+      const unsubscribeUrl = findFirstSafeUnsubscribeUrl(email[listUnsubscribeProperty]);
+      if (!unsubscribeUrl) {
+        log.tool("one_click_unsubscribe", "skipped", { emailId, reason: "no_https_url" });
+        return {
+          content: [
+            {
+              type: "text",
+              text: `Email "${subject}" does not include a safe HTTPS List-Unsubscribe URL.`,
+            },
+          ],
+        };
+      }
+
+      let unsubscribeResponse: Response;
+      try {
+        unsubscribeResponse = await postOneClickUnsubscribe(unsubscribeUrl);
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
+        log.tool("one_click_unsubscribe", "failed", { emailId, host: unsubscribeUrl.hostname, error: message });
+        return {
+          content: [
+            {
+              type: "text",
+              text: `One-click unsubscribe request to ${unsubscribeUrl.hostname} failed: ${message}`,
+            },
+          ],
+        };
+      }
+
+      if (!unsubscribeResponse.ok) {
+        log.tool("one_click_unsubscribe", "failed", { emailId, host: unsubscribeUrl.hostname, status: unsubscribeResponse.status });
+        return {
+          content: [
+            {
+              type: "text",
+              text: `One-click unsubscribe request to ${unsubscribeUrl.hostname} returned HTTP ${unsubscribeResponse.status}.`,
+            },
+          ],
+        };
+      }
+
+      log.tool("one_click_unsubscribe", "completed", { emailId, host: unsubscribeUrl.hostname, status: unsubscribeResponse.status });
+      return {
+        content: [
+          {
+            type: "text",
+            text: `One-click unsubscribe request sent for "${subject}" to ${unsubscribeUrl.hostname}.`,
+          },
+        ],
       };
     },
   );
