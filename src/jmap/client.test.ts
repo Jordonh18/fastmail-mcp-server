@@ -169,11 +169,19 @@ describe("JmapClient", () => {
     });
 
     it("uses default capabilities for mail requests", async () => {
+      const sessionWithSubmission = {
+        ...MOCK_SESSION,
+        capabilities: {
+          [JMAP_CAPABILITIES.CORE]: {},
+          [JMAP_CAPABILITIES.MAIL]: {},
+          [JMAP_CAPABILITIES.SUBMISSION]: {},
+        },
+      };
       const fetchMock = vi.fn()
         .mockResolvedValueOnce({
           ok: true,
           status: 200,
-          json: () => Promise.resolve(MOCK_SESSION),
+          json: () => Promise.resolve(sessionWithSubmission),
         })
         .mockResolvedValueOnce({
           ok: true,
@@ -195,6 +203,52 @@ describe("JmapClient", () => {
       expect(body.using).toContain(JMAP_CAPABILITIES.CORE);
       expect(body.using).toContain(JMAP_CAPABILITIES.MAIL);
       expect(body.using).toContain(JMAP_CAPABILITIES.SUBMISSION);
+    });
+
+    it("omits submission capability when not advertised by session", async () => {
+      const sessionNoSubmission = {
+        ...MOCK_SESSION,
+        capabilities: {
+          [JMAP_CAPABILITIES.CORE]: {},
+          [JMAP_CAPABILITIES.MAIL]: {},
+        },
+        accounts: {
+          "acc-123": {
+            name: "test@example.com",
+            isPersonal: true,
+            accountCapabilities: {
+              [JMAP_CAPABILITIES.MAIL]: {},
+            },
+          },
+        },
+      };
+      const fetchMock = vi.fn()
+        .mockResolvedValueOnce({
+          ok: true,
+          status: 200,
+          json: () => Promise.resolve(sessionNoSubmission),
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          status: 200,
+          json: () =>
+            Promise.resolve({
+              methodResponses: [],
+              sessionState: "session-state-1",
+            }),
+        });
+      globalThis.fetch = fetchMock;
+
+      const client = new JmapClient({ apiToken: "test-token" });
+      await client.request([
+        ["Mailbox/get", { accountId: "acc-123" }, "call-1"],
+      ]);
+
+      const body = JSON.parse(fetchMock.mock.calls[1][1].body as string);
+      expect(body.using).toEqual([
+        JMAP_CAPABILITIES.CORE,
+        JMAP_CAPABILITIES.MAIL,
+      ]);
     });
 
     it("accepts custom capabilities", async () => {

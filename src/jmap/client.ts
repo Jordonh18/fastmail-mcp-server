@@ -146,12 +146,16 @@ export class JmapClient {
     const methodNames = methodCalls.map(([name]) => name).join(", ");
     log.jmap("Request", `Calling: ${methodNames}`);
 
+    let effectiveUsing = using;
+    if (effectiveUsing === undefined) {
+      effectiveUsing = [JMAP_CAPABILITIES.CORE, JMAP_CAPABILITIES.MAIL];
+      if (await this.hasCapability(JMAP_CAPABILITIES.SUBMISSION)) {
+        effectiveUsing.push(JMAP_CAPABILITIES.SUBMISSION);
+      }
+    }
+
     const body: JmapRequest = {
-      using: using ?? [
-        JMAP_CAPABILITIES.CORE,
-        JMAP_CAPABILITIES.MAIL,
-        JMAP_CAPABILITIES.SUBMISSION,
-      ],
+      using: effectiveUsing,
       methodCalls,
     };
 
